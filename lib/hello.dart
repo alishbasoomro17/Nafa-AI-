@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'quiz_screen.dart'; // ✅ Import your quiz page
+import 'signup.dart';        // ✅ Corrected import
+import 'quiz_screen.dart';  // ✅ Added missing import
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
@@ -9,22 +10,22 @@ class OnboardingScreen extends StatelessWidget {
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: Colors.black, // Black background
+      backgroundColor: Colors.black, // Rich black background
       body: SafeArea(
         child: Center(
-          child: SingleChildScrollView( // ✅ Prevent overflow with scrollable container
+          child: SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(24.0),
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF121212), // Slightly lighter than pure black
+                  color: const Color(0xFF0D0D0D), // Slightly lighter black
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.white.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+                      color: Colors.purple.withOpacity(0.2), // Subtle purple glow
+                      blurRadius: 20,
+                      offset: const Offset(0, 6),
                     ),
                   ],
                 ),
@@ -39,19 +40,19 @@ class OnboardingScreen extends StatelessWidget {
                       height: size.width * 0.7,
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: [
-                            Color(0xFF095706), // Green gradient for image circle
-                            Color(0xFF524806),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
+                        color: Colors.black,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(0xFFAAF308),
+                            blurRadius: 12,
+                            spreadRadius: 1,
+                          )
+                        ],
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(24.0),
                         child: Image.asset(
-                          'assets/img_1.png',
+                          'assets/happy.png',
                           fit: BoxFit.contain,
                         ),
                       ),
@@ -87,25 +88,25 @@ class OnboardingScreen extends StatelessWidget {
 
                     const SizedBox(height: 40),
 
-                    // 💚 Solid Green Button
+                    // Purple Button
                     SizedBox(
-                      width: 200,
+                      width: 250,
                       height: 52,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF00C853), // Bright green
+                          backgroundColor: const Color(0xFF6E4BD8),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          elevation: 8,
-                          shadowColor: Colors.greenAccent.withOpacity(0.4),
+                          elevation: 10,
+                          shadowColor: const Color(0xFFAAF308).withOpacity(0.4),
                         ),
                         onPressed: () {
-                          // ✅ Navigate to QuizScreen
+                          // Change this if you want Signup first:
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const QuizScreen(),
+                              builder: (context) => const SignupScreen(),
                             ),
                           );
                         },

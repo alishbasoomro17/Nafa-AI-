@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart'; // Added for sound
 
 class QuizScreen extends StatefulWidget {
   const QuizScreen({super.key});
@@ -41,7 +42,6 @@ class _QuizScreenState extends State<QuizScreen> {
         "Expert",
       ],
     },
-
     {
       "questionId": 5,
       "questionText": "Which type of investments interest you the most?",
@@ -57,6 +57,17 @@ class _QuizScreenState extends State<QuizScreen> {
 
   int currentIndex = 0;
   String? selectedOption;
+
+  final AudioPlayer _audioPlayer = AudioPlayer(); // Audio player instance
+
+  // ----- Play sound on option click -----
+  void _playOptionSound() async {
+    try {
+      await _audioPlayer.play(AssetSource('success.mp3'));
+    } catch (e) {
+      print("Error playing sound: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +91,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     child: LinearProgressIndicator(
                       value: progress,
                       backgroundColor: Colors.white12,
-                      color: Colors.green,
+                      color: const Color(0xFF6E4BD8),
                       minHeight: 8,
                     ),
                   ),
@@ -97,7 +108,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
               const SizedBox(height: 40),
 
-              // 🔹 Centered content
+              // 🔹 Question Content
               Expanded(
                 child: Center(
                   child: SingleChildScrollView(
@@ -105,7 +116,6 @@ class _QuizScreenState extends State<QuizScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Question Text
                         Text(
                           currentQuestion["questionText"],
                           textAlign: TextAlign.center,
@@ -116,17 +126,15 @@ class _QuizScreenState extends State<QuizScreen> {
                             height: 1.4,
                           ),
                         ),
-
                         const SizedBox(height: 30),
 
-                        // Options (Equal size & centered)
                         Column(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: currentQuestion["options"]
-                              .map<Widget>((option) {
+                          children: currentQuestion["options"].map<Widget>((option) {
                             final isSelected = selectedOption == option;
                             return GestureDetector(
                               onTap: () {
+                                _playOptionSound(); // Play sound on option click
                                 setState(() {
                                   selectedOption = option;
                                 });
@@ -136,25 +144,23 @@ class _QuizScreenState extends State<QuizScreen> {
                                 curve: Curves.easeInOut,
                                 width: size.width * 0.8,
                                 height: 55,
-                                margin:
-                                const EdgeInsets.symmetric(vertical: 8.0),
+                                margin: const EdgeInsets.symmetric(vertical: 8.0),
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
                                   color: isSelected
-                                      ? Colors.green
-                                      : const Color(0xFF1E1E1E),
+                                      ? const Color(0xFFAAF308)
+                                      : const Color(0xFF1E1E2A),
                                   borderRadius: BorderRadius.circular(14),
                                   border: Border.all(
                                     color: isSelected
-                                        ? Colors.greenAccent
+                                        ? const Color(0xFFAAF308)
                                         : Colors.white10,
                                     width: 1.5,
                                   ),
                                   boxShadow: [
                                     if (isSelected)
                                       BoxShadow(
-                                        color: Colors.greenAccent
-                                            .withOpacity(0.3),
+                                        color: const Color(0xFFAAF308).withOpacity(0.3),
                                         blurRadius: 10,
                                         offset: const Offset(0, 4),
                                       ),
@@ -164,13 +170,9 @@ class _QuizScreenState extends State<QuizScreen> {
                                   option,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                    color: isSelected
-                                        ? Colors.white
-                                        : Colors.white70,
+                                    color: isSelected ? Colors.black : Colors.white70,
                                     fontSize: 16,
-                                    fontWeight: isSelected
-                                        ? FontWeight.w600
-                                        : FontWeight.normal,
+                                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                                   ),
                                 ),
                               ),
@@ -183,7 +185,7 @@ class _QuizScreenState extends State<QuizScreen> {
                 ),
               ),
 
-              // 🔹 Next / Finish button (bottom center)
+              // 🔹 Next / Finish button
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: SizedBox(
@@ -191,12 +193,12 @@ class _QuizScreenState extends State<QuizScreen> {
                   height: 52,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
+                      backgroundColor: const Color(0xFF6E4BD8),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       elevation: 8,
-                      shadowColor: Colors.greenAccent.withOpacity(0.4),
+                      shadowColor: const Color(0xFFAAF308).withOpacity(0.4),
                     ),
                     onPressed: selectedOption == null
                         ? null
@@ -207,21 +209,16 @@ class _QuizScreenState extends State<QuizScreen> {
                           selectedOption = null;
                         });
                       } else {
-                        // ✅ Quiz completed (navigate to next page later)
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text(
-                              "Quiz completed! Welcome to Nafa AI 🎉",
-                            ),
-                            backgroundColor: Colors.green,
+                            content: Text("Quiz completed! Welcome to Nafa AI 🎉"),
+                            backgroundColor: Color(0xFF6E4BD8),
                           ),
                         );
                       }
                     },
                     child: Text(
-                      currentIndex == questions.length - 1
-                          ? "Finish"
-                          : "Next",
+                      currentIndex == questions.length - 1 ? "Finish" : "Next",
                       style: const TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
