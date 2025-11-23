@@ -50,23 +50,56 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // ----- Login handler -----
-  void _handleLogin() {
-    _playButtonSound(); // Play sound on login tap
-    if (_formKey.currentState!.validate()) {
-      final email = _emailController.text.trim();
-      final password = _passwordController.text.trim();
+  void _handleLogin() async {
+    _playButtonSound(); // Play sound
 
-      if (email == 'abc@gmail.com' && password == '123456') {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const QuizScreen()),
+    if (_formKey.currentState!.validate()) {
+      // Prepare data to send
+      final userData = {
+        "username": _emailController.text,
+        "password": _passwordController.text,
+        "role":"broker"
+      };
+      print(userData);
+
+      try {
+        final response = await http.post(
+          Uri.parse("http://127.0.0.1:3000/users/login"), // Your backend URL
+          headers: {"Content-Type": "application/json"},
+          body: jsonEncode(userData),
         );
-      } else {
+
+        if (response.statusCode == 201) {
+          print("Success: ${response.body}");
+          final data = jsonDecode(response.body);
+
+          final token = data["access_token"];
+
+          // Save token
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString("token", token);
+
+          print("TOKEN SAVED: $token");
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Login Successful!")),
+          );
+
+          Future.delayed(const Duration(seconds: 1), () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const QuizScreen()),
+            );
+          });
+        } else {
+          print("Error: ${response.body}");
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Signup Failed: ${response.statusCode}")),
+          );
+        }
+      } catch (e) {
+        print("Exception: $e");
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Invalid credentials. Use abc@gmail.com / 123456'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text("Network Error: $e")),
         );
       }
     }

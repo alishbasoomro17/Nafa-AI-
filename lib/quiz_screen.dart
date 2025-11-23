@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:audioplayers/audioplayers.dart'; // Added for sound
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:jwt_decoder/jwt_decoder.dart';
+
+
 
 class QuizScreen extends StatefulWidget {
   const QuizScreen({super.key});
@@ -9,51 +15,277 @@ class QuizScreen extends StatefulWidget {
 }
 
 class _QuizScreenState extends State<QuizScreen> {
-  final List<Map<String, dynamic>> questions = [
+  final List<Map<String, dynamic>> submittedAnswers = [];
+  Future<String?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("token");
+
+    if (token == null) return null;
+
+    final decoded = JwtDecoder.decode(token);
+
+    // Assuming NestJS stored userId as "sub"
+    return decoded["id"]?.toString();
+  }
+
+  Future<void> submitQuizToBackend() async {
+    print("pressed button");
+    print(submittedAnswers);
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("token");
+
+    final userId = await getUserId();
+    print(userId);
+
+    try
+    {
+      final response = await http.post(
+        Uri.parse("http://127.0.0.1:3000/quiz/submit-answers/$userId"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode(submittedAnswers), // MUST be array
+      );
+
+      print("Status Code: ${response.statusCode}");
+      print("Response: ${response.body}");
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Answers submitted successfully!")),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed: ${response.body}")),
+        );
+      }
+    } catch (e) {
+      print("EXCEPTION: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error sending answers: $e")),
+      );
+    }
+  }
+  final List<Map<String, dynamic>> questions =
+  [
     {
       "questionId": 1,
-      "questionText": "What is your age group?",
+      "questionText": "What is my primary investment goal right now?",
       "options": [
-        "Under 18",
-        "18–24",
-        "25–34",
-        "35–44",
-        "45 and above",
-      ],
+        "Capital preservation",
+        "Steady income",
+        "Moderate growth",
+        "High growth",
+        "Aggressive speculation"
+      ]
     },
     {
       "questionId": 2,
-      "questionText": "What is your primary investment goal?",
+      "questionText": "What is my time horizon for using the money I plan to invest?",
       "options": [
-        "Short-term profits",
-        "Long-term wealth",
-        "Retirement planning",
-        "Education fund",
-        "Not sure yet",
-      ],
+        "Less than 1 year",
+        "1–3 years",
+        "4–7 years",
+        "8–15 years",
+        "More than 15 years"
+      ]
     },
     {
       "questionId": 3,
-      "questionText": "How much experience do you have in investing?",
+      "questionText": "How comfortable am I with short-term fluctuations in my portfolio value?",
       "options": [
-        "None",
-        "Beginner",
-        "Intermediate",
-        "Expert",
-      ],
+        "Not comfortable at all",
+        "Slightly uncomfortable",
+        "Neutral",
+        "Comfortable",
+        "Very comfortable"
+      ]
+    },
+    {
+      "questionId": 4,
+      "questionText": "How would I react if my investments dropped 20% in a few months?",
+      "options": [
+        "Sell everything to avoid more losses",
+        "Sell some to reduce risk",
+        "Hold and wait",
+        "Buy more at lower price"
+      ]
     },
     {
       "questionId": 5,
-      "questionText": "Which type of investments interest you the most?",
+      "questionText": "How would I describe my current financial stability?",
       "options": [
-        "Stocks",
-        "Mutual Funds",
-        "Crypto",
-        "Real Estate",
-        "Bonds",
-      ],
+        "Unstable with high liabilities",
+        "Somewhat stable but stressed",
+        "Stable",
+        "Very stable with low liabilities",
+        "Extremely stable with strong savings"
+      ]
     },
-  ];
+    {
+      "questionId": 6,
+      "questionText": "Do I have an emergency fund covering at least 3–6 months of expenses?",
+      "options": [
+        "No",
+        "Partially",
+        "Yes"
+      ]
+    },
+    {
+      "questionId": 7,
+      "questionText": "How much does this investment amount matter to my overall net worth?",
+      "options": [
+        "Critical portion",
+        "Large portion",
+        "Moderate portion",
+        "Small portion",
+        "Very small portion"
+      ]
+    },
+    {
+      "questionId": 8,
+      "questionText": "How would I rate my knowledge of stock investing?",
+      "options": [
+        "None",
+        "Basic",
+        "Intermediate",
+        "Advanced",
+        "Expert"
+      ]
+    },
+    {
+      "questionId": 9,
+      "questionText": "Which investment products am I comfortable using?",
+      "options": [
+        "Savings accounts",
+        "Mutual funds / ETFs",
+        "Individual stocks",
+        "Options / Futures",
+        "Margin or leveraged products"
+      ]
+    },
+    {
+      "questionId": 10,
+      "questionText": "How many years of experience do I have actively investing?",
+      "options": [
+        "0 years",
+        "Less than 1 year",
+        "1–3 years",
+        "4–7 years",
+        "More than 7 years"
+      ]
+    },
+    {
+      "questionId": 11,
+      "questionText": "How often do I monitor my portfolio?",
+      "options": [
+        "Multiple times a day",
+        "Daily",
+        "Weekly",
+        "Monthly",
+        "Rarely"
+      ]
+    },
+    {
+      "questionId": 12,
+      "questionText": "How do I typically make investment decisions?",
+      "options": [
+        "Following tips or influencers",
+        "Impulsive decisions",
+        "Basic research",
+        "Detailed analysis",
+        "Highly structured research process"
+      ]
+    },
+    {
+      "questionId": 13,
+      "questionText": "How do I feel emotionally when markets drop sharply?",
+      "options": [
+        "Very anxious",
+        "Somewhat anxious",
+        "Neutral",
+        "Calm",
+        "Unbothered"
+      ]
+    },
+    {
+      "questionId": 14,
+      "questionText": "If a single stock in my portfolio drops 50%, what is my likely action?",
+      "options": [
+        "Sell immediately",
+        "Sell part of it",
+        "Hold and wait",
+        "Buy more",
+        "Re-evaluate based on fundamentals"
+      ]
+    },
+    {
+      "questionId": 15,
+      "questionText": "How dependent am I on this invested money for short-term needs?",
+      "options": [
+        "Highly dependent",
+        "Somewhat dependent",
+        "Not very dependent",
+        "Not dependent at all"
+      ]
+    },
+    {
+      "questionId": 16,
+      "questionText": "How would I rate my ability to handle financial losses?",
+      "options": [
+        "Cannot tolerate losses",
+        "Very low tolerance",
+        "Moderate tolerance",
+        "High tolerance",
+        "Very high tolerance"
+      ]
+    },
+    {
+      "questionId": 17,
+      "questionText": "What percentage of my assets am I comfortable allocating to stocks?",
+      "options": [
+        "0–20%",
+        "21–40%",
+        "41–60%",
+        "61–80%",
+        "81–100%"
+      ]
+    },
+    {
+      "questionId": 18,
+      "questionText": "How likely am I to follow friends, social media, or hype when investing?",
+      "options": [
+        "Very likely",
+        "Somewhat likely",
+        "Neutral",
+        "Unlikely",
+        "Never"
+      ]
+    },
+    {
+      "questionId": 19,
+      "questionText": "How would I react if markets stayed volatile for a long period?",
+      "options": [
+        "Panic and exit the market",
+        "Gradually reduce exposure",
+        "Stay invested with no changes",
+        "Increase exposure to capture opportunities"
+      ]
+    },
+    {
+      "questionId": 20,
+      "questionText": "What motivates me most to invest in stocks?",
+      "options": [
+        "Fear of losing money elsewhere",
+        "Need income",
+        "Desire for long-term growth",
+        "Desire to beat the market",
+        "Desire for fast high returns"
+      ]
+    }
+  ]
+  ;
 
   int currentIndex = 0;
   String? selectedOption;
@@ -203,20 +435,24 @@ class _QuizScreenState extends State<QuizScreen> {
                     onPressed: selectedOption == null
                         ? null
                         : () {
+                      // Save current question answer
+                      submittedAnswers.add({
+                        "questionId": currentQuestion["questionId"],
+                        "questionText": currentQuestion["questionText"],
+                        "quizAnswer": selectedOption,
+                      });
+
                       if (currentIndex < questions.length - 1) {
                         setState(() {
                           currentIndex++;
                           selectedOption = null;
                         });
                       } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Quiz completed! Welcome to Nafa AI 🎉"),
-                            backgroundColor: Color(0xFF6E4BD8),
-                          ),
-                        );
+                        print("Submitted Answers: $submittedAnswers");
+                        submitQuizToBackend(); // << call API here
                       }
                     },
+
                     child: Text(
                       currentIndex == questions.length - 1 ? "Finish" : "Next",
                       style: const TextStyle(

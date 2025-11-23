@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'login_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'quiz_screen.dart';
 import 'package:audioplayers/audioplayers.dart'; // Added for sound
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -55,19 +58,59 @@ class _SignupScreenState extends State<SignupScreen> {
     return null;
   }
 
-  void _handleSignup() {
-    _playButtonSound(); // Play sound on tap
+  void _handleSignup() async {
+    _playButtonSound(); // Play sound
+
     if (_formKey.currentState!.validate()) {
-      // If validation successful, you can navigate or show success
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Sign Up Successful!")));
-      // Navigate to login screen after a small delay
-      Future.delayed(const Duration(seconds: 1), () {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
+      // Prepare data to send
+      final userData = {
+        "username": _fullNameController.text,
+        "email": _emailController.text,
+        "password": _passwordController.text,
+        "role":"broker"
+      };
+      print(userData);
+
+      try {
+        final response = await http.post(
+          Uri.parse("http://127.0.0.1:3000/users/register-user"), // Your backend URL
+          headers: {"Content-Type": "application/json"},
+          body: jsonEncode(userData),
         );
-      });
+
+        if (response.statusCode == 201) {
+          print("Success: ${response.body}");
+          final data = jsonDecode(response.body);
+
+          final token = data["access_token"];
+
+          // Save token
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString("token", token);
+
+          print("TOKEN SAVED: $token");
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Signup Successful!")),
+          );
+
+          Future.delayed(const Duration(seconds: 1), () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const QuizScreen()),
+            );
+          });
+        } else {
+          print("Error: ${response.body}");
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Signup Failed: ${response.statusCode}")),
+          );
+        }
+      } catch (e) {
+        print("Exception: $e");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Network Error: $e")),
+        );
+      }
     }
   }
 
@@ -200,7 +243,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             // REMOVE _playButtonSound(); here
                             Navigator.pushReplacement(
                               context,
-                              MaterialPageRoute(builder: (_) => const LoginScreen()),
+                              MaterialPageRoute(builder: (_) => const QuizScreen()),
                             );
                           },
                           child: RichText(
