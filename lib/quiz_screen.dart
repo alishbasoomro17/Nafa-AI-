@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:audioplayers/audioplayers.dart'; // Added for sound
+import 'package:audioplayers/audioplayers.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:jwt_decoder/jwt_decoder.dart';
 
+import 'after_quiz_splash.dart';
 
 
 class QuizScreen extends StatefulWidget {
@@ -37,6 +38,26 @@ class _QuizScreenState extends State<QuizScreen> {
     final userId = await getUserId();
     print(userId);
 
+    // --- Start Navigation Logic ---
+    // A future to hold the result of the navigation
+    Future<void> navigateAfterSubmission;
+
+    // Check if we are on the last question before submitting
+    if (currentIndex == questions.length - 1) {
+      // Prepare navigation *before* the API call, so we can use `await` on the API call
+      // and navigate immediately after the API call completes.
+      navigateAfterSubmission = Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => const AfterQuizSplash(),
+        ),
+      );
+    } else {
+      // If somehow this is called before the last question, do nothing.
+      navigateAfterSubmission = Future.value();
+    }
+    // --- End Navigation Logic ---
+
+
     try
     {
       final response = await http.post(
@@ -55,6 +76,7 @@ class _QuizScreenState extends State<QuizScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Answers submitted successfully!")),
         );
+
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Failed: ${response.body}")),
@@ -66,7 +88,12 @@ class _QuizScreenState extends State<QuizScreen> {
         SnackBar(content: Text("Error sending answers: $e")),
       );
     }
+
+    // Now navigate to the splash screen.
+    // We are using `pushReplacement` so the user cannot go back to the quiz.
+    await navigateAfterSubmission;
   }
+
   final List<Map<String, dynamic>> questions =
   [
     {
@@ -301,6 +328,14 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
+  // Dispose of the audio player when the widget is removed
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+
   @override
   Widget build(BuildContext context) {
     double progress = (currentIndex + 1) / questions.length;
@@ -434,7 +469,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     ),
                     onPressed: selectedOption == null
                         ? null
-                        : () {
+                        : () async { // Changed to async to await API call and navigation
                       // Save current question answer
                       submittedAnswers.add({
                         "questionId": currentQuestion["questionId"],
@@ -449,7 +484,7 @@ class _QuizScreenState extends State<QuizScreen> {
                         });
                       } else {
                         print("Submitted Answers: $submittedAnswers");
-                        submitQuizToBackend(); // << call API here
+                        await submitQuizToBackend(); // Await API call and navigation
                       }
                     },
 

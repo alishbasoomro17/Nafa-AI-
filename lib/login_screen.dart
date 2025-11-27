@@ -64,9 +64,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
       try {
         final response = await http.post(
-          Uri.parse("http://127.0.0.1:3000/users/login"), // Your backend URL
-          headers: {"Content-Type": "application/json"},
-          body: jsonEncode(userData),
+          //Uri.parse("http://127.0.0.1:3000/users/login"), // Your backend URL
+          //headers: {"Content-Type": "application/json"},
+          //body: jsonEncode(userData),
         );
 
         if (response.statusCode == 201) {
@@ -134,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(10),
-                  child: Image.asset("assets/happy.png", fit: BoxFit.contain),
+                  child: Image.asset("assets/logo1.png", fit: BoxFit.contain),
                 ),
               ),
 
