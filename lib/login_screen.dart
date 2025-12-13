@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'signup.dart';
 import 'forgot_password.dart';
 import 'quiz_screen.dart';
-import 'package:audioplayers/audioplayers.dart'; // Added for sound
+import 'package:audioplayers/audioplayers.dart'; 
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

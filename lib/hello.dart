@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'signup.dart';        // ✅ Corrected import
-import 'quiz_screen.dart';  // ✅ Added missing import
+import 'signup.dart';       
+import 'quiz_screen.dart'; 
+
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
