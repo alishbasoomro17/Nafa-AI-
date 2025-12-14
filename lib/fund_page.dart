@@ -412,7 +412,7 @@ class _FundViewPageState extends State<FundViewPage> {
               Text("+ PKR ${profit.toStringAsFixed(2)}",
                   style: const TextStyle(
                       color: _kAccentSuccess,
-                      fontSize: 15,
+                      fontSize: 12,
                       fontWeight: FontWeight.bold)),
             ],
           ),
@@ -429,7 +429,7 @@ class _FundViewPageState extends State<FundViewPage> {
               Text("PKR ${total.toStringAsFixed(2)}",
                   style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 18,
+                      fontSize: 14,
                       fontWeight: FontWeight.w900)),
             ],
           ),
