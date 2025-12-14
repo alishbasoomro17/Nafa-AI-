@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:op/recommendations_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:audioplayers/audioplayers.dart'; // Added for sound
 import 'dart:convert';
@@ -55,6 +56,31 @@ class _QuizScreenState extends State<QuizScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Answers submitted successfully!")),
         );
+        // parse response body for riskCategory
+   
+        String riskCategory = '';
+        try {
+          final body = jsonDecode(response.body);
+          if (body is Map) {
+            riskCategory = (body['riskCategory'] ?? body['risk'] ?? body['category'] ?? body['risk_category'] ?? '').toString();
+          }
+        } catch (e) {
+          print('Error parsing quiz response: $e');
+        }
+
+        // store riskCategory in SharedPreferences for later use
+        if (riskCategory.isNotEmpty) {
+          await prefs.setString('riskCategory', riskCategory);
+        }
+        // store full response body for recommendations use
+        await prefs.setString('quiz_result_body', response.body);
+
+        Future.delayed(const Duration(seconds: 1), () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => RecommendationScreen( riskCategory: riskCategory)),
+          );
+        });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Failed: ${response.body}")),
@@ -67,104 +93,107 @@ class _QuizScreenState extends State<QuizScreen> {
       );
     }
   }
+ 
+ 
+ 
   final List<Map<String, dynamic>> questions =
   [
-    {
-      "questionId": 1,
-      "questionText": "What is my primary investment goal right now?",
-      "options": [
-        "Capital preservation",
-        "Steady income",
-        "Moderate growth",
-        "High growth",
-        "Aggressive speculation"
-      ]
-    },
-    {
-      "questionId": 2,
-      "questionText": "What is my time horizon for using the money I plan to invest?",
-      "options": [
-        "Less than 1 year",
-        "1–3 years",
-        "4–7 years",
-        "8–15 years",
-        "More than 15 years"
-      ]
-    },
-    {
-      "questionId": 3,
-      "questionText": "How comfortable am I with short-term fluctuations in my portfolio value?",
-      "options": [
-        "Not comfortable at all",
-        "Slightly uncomfortable",
-        "Neutral",
-        "Comfortable",
-        "Very comfortable"
-      ]
-    },
-    {
-      "questionId": 4,
-      "questionText": "How would I react if my investments dropped 20% in a few months?",
-      "options": [
-        "Sell everything to avoid more losses",
-        "Sell some to reduce risk",
-        "Hold and wait",
-        "Buy more at lower price"
-      ]
-    },
-    {
-      "questionId": 5,
-      "questionText": "How would I describe my current financial stability?",
-      "options": [
-        "Unstable with high liabilities",
-        "Somewhat stable but stressed",
-        "Stable",
-        "Very stable with low liabilities",
-        "Extremely stable with strong savings"
-      ]
-    },
-    {
-      "questionId": 6,
-      "questionText": "Do I have an emergency fund covering at least 3–6 months of expenses?",
-      "options": [
-        "No",
-        "Partially",
-        "Yes"
-      ]
-    },
-    {
-      "questionId": 7,
-      "questionText": "How much does this investment amount matter to my overall net worth?",
-      "options": [
-        "Critical portion",
-        "Large portion",
-        "Moderate portion",
-        "Small portion",
-        "Very small portion"
-      ]
-    },
-    {
-      "questionId": 8,
-      "questionText": "How would I rate my knowledge of stock investing?",
-      "options": [
-        "None",
-        "Basic",
-        "Intermediate",
-        "Advanced",
-        "Expert"
-      ]
-    },
-    {
-      "questionId": 9,
-      "questionText": "Which investment products am I comfortable using?",
-      "options": [
-        "Savings accounts",
-        "Mutual funds / ETFs",
-        "Individual stocks",
-        "Options / Futures",
-        "Margin or leveraged products"
-      ]
-    },
+    // {
+    //   "questionId": 1,
+    //   "questionText": "What is my primary investment goal right now?",
+    //   "options": [
+    //     "Capital preservation",
+    //     "Steady income",
+    //     "Moderate growth",
+    //     "High growth",
+    //     "Aggressive speculation"
+    //   ]
+    // },
+    // {
+    //   "questionId": 2,
+    //   "questionText": "What is my time horizon for using the money I plan to invest?",
+    //   "options": [
+    //     "Less than 1 year",
+    //     "1–3 years",
+    //     "4–7 years",
+    //     "8–15 years",
+    //     "More than 15 years"
+    //   ]
+    // },
+    // {
+    //   "questionId": 3,
+    //   "questionText": "How comfortable am I with short-term fluctuations in my portfolio value?",
+    //   "options": [
+    //     "Not comfortable at all",
+    //     "Slightly uncomfortable",
+    //     "Neutral",
+    //     "Comfortable",
+    //     "Very comfortable"
+    //   ]
+    // },
+    // {
+    //   "questionId": 4,
+    //   "questionText": "How would I react if my investments dropped 20% in a few months?",
+    //   "options": [
+    //     "Sell everything to avoid more losses",
+    //     "Sell some to reduce risk",
+    //     "Hold and wait",
+    //     "Buy more at lower price"
+    //   ]
+    // },
+    // {
+    //   "questionId": 5,
+    //   "questionText": "How would I describe my current financial stability?",
+    //   "options": [
+    //     "Unstable with high liabilities",
+    //     "Somewhat stable but stressed",
+    //     "Stable",
+    //     "Very stable with low liabilities",
+    //     "Extremely stable with strong savings"
+    //   ]
+    // },
+    // {
+    //   "questionId": 6,
+    //   "questionText": "Do I have an emergency fund covering at least 3–6 months of expenses?",
+    //   "options": [
+    //     "No",
+    //     "Partially",
+    //     "Yes"
+    //   ]
+    // },
+    // {
+    //   "questionId": 7,
+    //   "questionText": "How much does this investment amount matter to my overall net worth?",
+    //   "options": [
+    //     "Critical portion",
+    //     "Large portion",
+    //     "Moderate portion",
+    //     "Small portion",
+    //     "Very small portion"
+    //   ]
+    // },
+    // {
+    //   "questionId": 8,
+    //   "questionText": "How would I rate my knowledge of stock investing?",
+    //   "options": [
+    //     "None",
+    //     "Basic",
+    //     "Intermediate",
+    //     "Advanced",
+    //     "Expert"
+    //   ]
+    // },
+    // {
+    //   "questionId": 9,
+    //   "questionText": "Which investment products am I comfortable using?",
+    //   "options": [
+    //     "Savings accounts",
+    //     "Mutual funds / ETFs",
+    //     "Individual stocks",
+    //     "Options / Futures",
+    //     "Margin or leveraged products"
+    //   ]
+    // },
     {
       "questionId": 10,
       "questionText": "How many years of experience do I have actively investing?",
@@ -220,70 +249,70 @@ class _QuizScreenState extends State<QuizScreen> {
         "Re-evaluate based on fundamentals"
       ]
     },
-    {
-      "questionId": 15,
-      "questionText": "How dependent am I on this invested money for short-term needs?",
-      "options": [
-        "Highly dependent",
-        "Somewhat dependent",
-        "Not very dependent",
-        "Not dependent at all"
-      ]
-    },
-    {
-      "questionId": 16,
-      "questionText": "How would I rate my ability to handle financial losses?",
-      "options": [
-        "Cannot tolerate losses",
-        "Very low tolerance",
-        "Moderate tolerance",
-        "High tolerance",
-        "Very high tolerance"
-      ]
-    },
-    {
-      "questionId": 17,
-      "questionText": "What percentage of my assets am I comfortable allocating to stocks?",
-      "options": [
-        "0–20%",
-        "21–40%",
-        "41–60%",
-        "61–80%",
-        "81–100%"
-      ]
-    },
-    {
-      "questionId": 18,
-      "questionText": "How likely am I to follow friends, social media, or hype when investing?",
-      "options": [
-        "Very likely",
-        "Somewhat likely",
-        "Neutral",
-        "Unlikely",
-        "Never"
-      ]
-    },
-    {
-      "questionId": 19,
-      "questionText": "How would I react if markets stayed volatile for a long period?",
-      "options": [
-        "Panic and exit the market",
-        "Gradually reduce exposure",
-        "Stay invested with no changes",
-        "Increase exposure to capture opportunities"
-      ]
-    },
-    {
-      "questionId": 20,
-      "questionText": "What motivates me most to invest in stocks?",
-      "options": [
-        "Fear of losing money elsewhere",
-        "Need income",
-        "Desire for long-term growth",
-        "Desire to beat the market",
-        "Desire for fast high returns"
-      ]
-    }
+    // {
+    //   "questionId": 15,
+    //   "questionText": "How dependent am I on this invested money for short-term needs?",
+    //   "options": [
+    //     "Highly dependent",
+    //     "Somewhat dependent",
+    //     "Not very dependent",
+    //     "Not dependent at all"
+    //   ]
+    // },
+    // {
+    //   "questionId": 16,
+    //   "questionText": "How would I rate my ability to handle financial losses?",
+    //   "options": [
+    //     "Cannot tolerate losses",
+    //     "Very low tolerance",
+    //     "Moderate tolerance",
+    //     "High tolerance",
+    //     "Very high tolerance"
+    //   ]
+    // },
+    // {
+    //   "questionId": 17,
+    //   "questionText": "What percentage of my assets am I comfortable allocating to stocks?",
+    //   "options": [
+    //     "0–20%",
+    //     "21–40%",
+    //     "41–60%",
+    //     "61–80%",
+    //     "81–100%"
+    //   ]
+    // },
+    // {
+    //   "questionId": 18,
+    //   "questionText": "How likely am I to follow friends, social media, or hype when investing?",
+    //   "options": [
+    //     "Very likely",
+    //     "Somewhat likely",
+    //     "Neutral",
+    //     "Unlikely",
+    //     "Never"
+    //   ]
+    // },
+    // {
+    //   "questionId": 19,
+    //   "questionText": "How would I react if markets stayed volatile for a long period?",
+    //   "options": [
+    //     "Panic and exit the market",
+    //     "Gradually reduce exposure",
+    //     "Stay invested with no changes",
+    //     "Increase exposure to capture opportunities"
+    //   ]
+    // },
+    // {
+    //   "questionId": 20,
+    //   "questionText": "What motivates me most to invest in stocks?",
+    //   "options": [
+    //     "Fear of losing money elsewhere",
+    //     "Need income",
+    //     "Desire for long-term growth",
+    //     "Desire to beat the market",
+    //     "Desire for fast high returns"
+    //   ]
+    // }
   ]
   ;
 

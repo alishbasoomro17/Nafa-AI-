@@ -124,30 +124,27 @@ class _SignupScreenState extends State<SignupScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SizedBox(height: 30),
+              const SizedBox(height: 5),
 
-              // Mascot
+// Mascot
               Container(
-                width: 100,
-                height: 100,
                 decoration: BoxDecoration(
                   color: Colors.black,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFAAF308).withOpacity(0.6),
-                      blurRadius: 16,
-                      spreadRadius: 3,
-                    ),
-                  ],
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(10),
-                  child: Image.asset("assets/happy.png", fit: BoxFit.contain),
+                  child: SizedBox(
+                    width: 160,  // adjust size here
+                    height: 160, // adjust size here
+                    child: Image.asset(
+                      "assets/logo1.png",
+                      fit: BoxFit.contain,
+                    ),
+                  ),
                 ),
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 0),
 
               // Form
               Padding(
