@@ -15,6 +15,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   bool isLoading = true;
   List<dynamic> recommendations = [];
   String? errorMessage;
+  bool _isRiskDialogVisible = false;
 
   @override
   void initState() {
@@ -27,6 +28,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   }
 
   Future<void> fetchRecommendations() async {
+    _showRiskDialog();
     try {
       final response = await http.post(
         Uri.parse('http://127.0.0.1:3000/ai/recommend-by-risk'),
@@ -41,17 +43,88 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
           recommendations = decoded['recommendations'] ?? [];
           isLoading = false;
         });
+        _dismissRiskDialog();
       } else {
         setState(() {
           errorMessage = 'Failed with status ${response.statusCode}';
           isLoading = false;
         });
+        _dismissRiskDialog();
       }
     } catch (e) {
       setState(() {
         errorMessage = e.toString();
         isLoading = false;
       });
+      _dismissRiskDialog();
+    }
+  }
+
+  void _showRiskDialog() {
+    if (!mounted || _isRiskDialogVisible) return;
+    _isRiskDialogVisible = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          final risk = widget.riskCategory.isNotEmpty
+              ? (widget.riskCategory[0].toUpperCase() + widget.riskCategory.substring(1))
+              : widget.riskCategory;
+          return AlertDialog(
+  backgroundColor: Colors.black,
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(16),
+  ),
+  content: Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(
+        "Profile Analyzed 📊",
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      const SizedBox(height: 8),
+      Text(
+        "You are a $risk risk-level investor.\n\nLet us pick the stocks that best match your profile.",
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: Colors.white.withOpacity(0.85),
+          fontSize: 14,
+        ),
+      ),
+      const SizedBox(height: 20),
+      const CircularProgressIndicator(
+        color: Colors.greenAccent,
+      ),
+      const SizedBox(height: 10),
+      Text(
+        "Finding the best opportunities for you...",
+        style: TextStyle(
+          color: Colors.white.withOpacity(0.6),
+          fontSize: 12,
+        ),
+      ),
+    ],
+  ),
+);
+ },
+      );
+    });
+  }
+
+  void _dismissRiskDialog() {
+    if (!mounted || !_isRiskDialogVisible) return;
+    _isRiskDialogVisible = false;
+    try {
+      Navigator.of(context, rootNavigator: true).pop();
+    } catch (_) {
+      // ignore if dialog already dismissed
     }
   }
 
@@ -127,6 +200,12 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                       itemBuilder: (context, index) {
                         final stock = recommendations[index];
 
+                        // Normalize status and determine shariah compliance.
+                        final status = (stock['Status '] ?? '').toString().toLowerCase();
+                        // Treat entries that explicitly say "not"/"non" + "halal" as non-shariah.
+                        final bool isExplicitNonHalal = (status.contains('not') && status.contains('halal')) || (status.contains('non') && status.contains('halal'));
+                        final bool shariah = !isExplicitNonHalal && status.contains('halal');
+
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 10),
                           child: _stockCard(
@@ -136,10 +215,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                             percentChange:
                                 "${stock['DailyReturn%']?.toStringAsFixed(2) ?? '0'}%",
                             risk: stock['RiskLevel'] ?? 'Moderate',
-                            shariah: (stock['Status '] ?? '')
-                                .toString()
-                                .toLowerCase()
-                                .contains('halal'),
+                            shariah: shariah,
                           ),
                         );
                       },
