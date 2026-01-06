@@ -3,6 +3,9 @@ import 'home_page.dart';
 import 'recommendation_page.dart';
 import 'profile_page.dart';
 
+const Color purpleAccent = Color(0xFF6E4BD8);
+const Color greenMain = Color(0xFFAAF308);
+
 class CustomerSupportPage extends StatefulWidget {
   const CustomerSupportPage({super.key});
 
@@ -54,20 +57,11 @@ class _CustomerSupportPageState extends State<CustomerSupportPage> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         title: const Text(
-          "Customer Support",
-          style: TextStyle(color: Colors.white),
+          "",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.call, color: Colors.lightGreenAccent),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Audio call coming soon")),
-              );
-            },
-          ),
-        ],
+        elevation: 0,
       ),
       body: Column(
         children: [
@@ -81,25 +75,48 @@ class _CustomerSupportPageState extends State<CustomerSupportPage> {
 
                 return Align(
                   alignment:
-                  isCustomer ? Alignment.centerRight : Alignment.centerLeft,
+                      isCustomer ? Alignment.centerRight : Alignment.centerLeft,
                   child: Container(
                     margin: const EdgeInsets.symmetric(vertical: 6),
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(14),
                     constraints: BoxConstraints(
                       maxWidth: MediaQuery.of(context).size.width * 0.75,
                     ),
                     decoration: BoxDecoration(
-                      color: isCustomer ? Colors.lightGreenAccent : Colors.grey[900],
-                      borderRadius: BorderRadius.circular(12),
+                      gradient: isCustomer
+                          ? LinearGradient(
+                              colors: [greenMain.withOpacity(0.8), greenMain],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : LinearGradient(
+                              colors: [Colors.grey[850]!, Colors.grey[900]!],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                      borderRadius: BorderRadius.only(
+                        topLeft: const Radius.circular(16),
+                        topRight: const Radius.circular(16),
+                        bottomLeft: Radius.circular(isCustomer ? 16 : 4),
+                        bottomRight: Radius.circular(isCustomer ? 4 : 16),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.3),
+                          offset: const Offset(2, 2),
+                          blurRadius: 4,
+                        ),
+                      ],
                     ),
                     child: msg["isImage"]
-                        ? const Icon(Icons.image, size: 40, color: Colors.black)
+                        ? const Icon(Icons.image, size: 40, color: Colors.white)
                         : Text(
-                      msg["text"],
-                      style: TextStyle(
-                        color: isCustomer ? Colors.black : Colors.white,
-                      ),
-                    ),
+                            msg["text"],
+                            style: TextStyle(
+                              color: isCustomer ? Colors.black : Colors.white,
+                              fontSize: 16,
+                            ),
+                          ),
                   ),
                 );
               },
@@ -107,31 +124,42 @@ class _CustomerSupportPageState extends State<CustomerSupportPage> {
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            color: Colors.grey[900],
+            decoration: BoxDecoration(
+              color: Colors.grey[900],
+              border: Border(
+                top: BorderSide(color: Colors.grey[800]!, width: 1.5),
+              ),
+            ),
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.image, color: Colors.lightGreenAccent),
+                  icon: const Icon(Icons.image, color: purpleAccent),
                   onPressed: () {
-                    // 🔹 Show feature coming soon message instead of uploading
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text("Feature coming soon")),
                     );
                   },
                 ),
                 Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
-                      hintText: "Type your message...",
-                      hintStyle: TextStyle(color: Colors.white70),
-                      border: InputBorder.none,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[850],
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: TextField(
+                      controller: _messageController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        hintText: "Type your message...",
+                        hintStyle: TextStyle(color: Colors.white70),
+                        border: InputBorder.none,
+                      ),
                     ),
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.send, color: Colors.lightGreenAccent),
+                  icon: const Icon(Icons.send, color: purpleAccent),
                   onPressed: () {
                     _sendMessage(text: _messageController.text);
                   },
@@ -149,7 +177,7 @@ class _CustomerSupportPageState extends State<CustomerSupportPage> {
 Widget _bottomNavBar(BuildContext context, int currentIndex) {
   return BottomNavigationBar(
     backgroundColor: Colors.black,
-    selectedItemColor: Colors.lightGreenAccent,
+    selectedItemColor: greenMain,
     unselectedItemColor: Colors.white,
     currentIndex: currentIndex,
     type: BottomNavigationBarType.fixed,
@@ -179,8 +207,9 @@ Widget _bottomNavBar(BuildContext context, int currentIndex) {
     },
     items: const [
       BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-      BottomNavigationBarItem(icon: Icon(Icons.insights), label: "Recommendation"),
-      BottomNavigationBarItem(icon: Icon(Icons.support_agent), label: "Support"),
+      BottomNavigationBarItem(icon: Icon(Icons.star), label: "Recommendation"),
+      BottomNavigationBarItem(
+          icon: Icon(Icons.support_agent), label: "Support"),
       BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
     ],
   );

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
-
 import 'fund_page.dart';
 import 'home_page.dart';
 import 'profile_page.dart';
 import 'customer_support_page.dart';
+
+const Color purpleAccent = Color(0xFF6E4BD8);
+const Color greenMain = Color(0xFFAAF308);
 
 class RecommendationPage extends StatefulWidget {
   const RecommendationPage({super.key});
@@ -15,7 +17,6 @@ class RecommendationPage extends StatefulWidget {
 
 class _RecommendationPageState extends State<RecommendationPage> {
   final AudioPlayer _audioPlayer = AudioPlayer();
-  int? selectedCardIndex;
 
   void _playSound() async {
     try {
@@ -93,19 +94,20 @@ class _RecommendationPageState extends State<RecommendationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-
-      // 🔹 BODY
       body: Column(
         children: [
           const SizedBox(height: 24),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text(
-              "Recommendations",
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
               ),
             ),
           ),
@@ -114,18 +116,14 @@ class _RecommendationPageState extends State<RecommendationPage> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: ListView.builder(
+                physics: const BouncingScrollPhysics(),
                 itemCount: stocks.length,
                 itemBuilder: (context, index) {
                   final stock = stocks[index];
-                  final isSelected = selectedCardIndex == index;
 
                   return GestureDetector(
                     onTap: () {
                       _playSound();
-                      setState(() {
-                        selectedCardIndex = index;
-                      });
-
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -134,81 +132,135 @@ class _RecommendationPageState extends State<RecommendationPage> {
                         ),
                       );
                     },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      margin: const EdgeInsets.only(bottom: 10),
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 16),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: isSelected
-                            ? const Color(0xFFAAF308)
-                            : const Color(0x1F1A0F2F),
+                        color: const Color(0x1F1A0F2F),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: const Color(0xFF6E4BD8).withOpacity(0.7),
+                          color: purpleAccent.withOpacity(0.7),
                           width: 1,
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.4),
+                            blurRadius: 5,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                       ),
-                      child: Column(
+                      child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            stock["title"],
-                            style: TextStyle(
-                              color:
-                              isSelected ? Colors.black : Colors.white,
-                              fontWeight: FontWeight.bold,
+                          Container(
+                            width: 45,
+                            height: 45,
+                            decoration: BoxDecoration(
+                              color: purpleAccent.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.trending_up,
+                              color: purpleAccent,
+                              size: 26,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            stock["subtitle"],
-                            style: TextStyle(
-                              color: isSelected
-                                  ? Colors.black87
-                                  : Colors.white70,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: _riskColor(stock["risk"]),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  stock["risk"],
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  stock["title"],
                                   style: const TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 11,
+                                    color: Colors.white,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: stock["shariah"]
-                                      ? Colors.greenAccent
-                                      : Colors.redAccent,
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  stock["shariah"]
-                                      ? "Shariah"
-                                      : "Non-Shariah",
+                                const SizedBox(height: 4),
+                                Text(
+                                  stock["subtitle"],
                                   style: const TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white70,
+                                    fontSize: 12,
                                   ),
                                 ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: _riskColor(stock["risk"]),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        stock["risk"],
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: stock["shariah"]
+                                            ? greenMain
+                                            : Colors.redAccent,
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        stock["shariah"]
+                                            ? "Shariah"
+                                            : "Non-Shariah",
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: purpleAccent.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              stock["percentChange"],
+                              style: const TextStyle(
+                                color: purpleAccent,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
                               ),
-                            ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: purpleAccent,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Icon(
+                              Icons.arrow_forward,
+                              color: Colors.white,
+                              size: 18,
+                            ),
                           ),
                         ],
                       ),
@@ -220,8 +272,6 @@ class _RecommendationPageState extends State<RecommendationPage> {
           ),
         ],
       ),
-
-      // 🔹 BOTTOM NAVIGATION (same as support page)
       bottomNavigationBar: _bottomNavBar(context, 1),
     );
   }
@@ -231,7 +281,7 @@ class _RecommendationPageState extends State<RecommendationPage> {
 Widget _bottomNavBar(BuildContext context, int currentIndex) {
   return BottomNavigationBar(
     backgroundColor: Colors.black,
-    selectedItemColor: Colors.greenAccent,
+    selectedItemColor: greenMain,
     unselectedItemColor: Colors.white,
     currentIndex: currentIndex,
     type: BottomNavigationBarType.fixed,
@@ -265,10 +315,8 @@ Widget _bottomNavBar(BuildContext context, int currentIndex) {
     },
     items: const [
       BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-      BottomNavigationBarItem(
-          icon: Icon(Icons.star), label: "Recommendation"),
-      BottomNavigationBarItem(
-          icon: Icon(Icons.support_agent), label: "Support"),
+      BottomNavigationBarItem(icon: Icon(Icons.star), label: "Recommendation"),
+      BottomNavigationBarItem(icon: Icon(Icons.support_agent), label: "Support"),
       BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
     ],
   );

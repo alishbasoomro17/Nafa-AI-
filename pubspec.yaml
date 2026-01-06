@@ -32,6 +32,8 @@ dependencies:
   flutter:
     sdk: flutter
   audioplayers: ^6.5.1
+  translator: ^1.0.4+1
+  fl_chart: ^0.70.2
   http: ^1.2.0
   shared_preferences: ^2.2.2
   jwt_decoder: ^2.0.1

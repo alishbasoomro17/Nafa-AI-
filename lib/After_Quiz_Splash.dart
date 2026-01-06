@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'recommendations_screen.dart'; // Import the new destination screen
 
+
 class AfterQuizSplash extends StatelessWidget {
   const AfterQuizSplash({super.key});
+
 
   @override
   Widget build(BuildContext context) {
@@ -47,8 +49,10 @@ class AfterQuizSplash extends StatelessWidget {
               ),
             ),
 
+
             // Add a little Spacer before button to move it slightly up
             const SizedBox(height: 20),
+
 
             // Green See Recommendations Button
             Padding(
@@ -84,6 +88,7 @@ class AfterQuizSplash extends StatelessWidget {
                 ),
               ),
             ),
+
 
             // Extra bottom padding for spacing from screen edge
             const SizedBox(height: 60),

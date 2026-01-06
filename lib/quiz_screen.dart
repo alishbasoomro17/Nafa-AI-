@@ -7,6 +7,7 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 
 import 'after_quiz_splash.dart';
 
+
 class QuizScreen extends StatefulWidget {
   const QuizScreen({super.key});
 
@@ -16,8 +17,6 @@ class QuizScreen extends StatefulWidget {
 
 class _QuizScreenState extends State<QuizScreen> {
   final List<Map<String, dynamic>> submittedAnswers = [];
-
-  /*
   Future<String?> getUserId() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString("token");
@@ -40,18 +39,24 @@ class _QuizScreenState extends State<QuizScreen> {
     print(userId);
 
     // --- Start Navigation Logic ---
+    // A future to hold the result of the navigation
     Future<void> navigateAfterSubmission;
 
+    // Check if we are on the last question before submitting
     if (currentIndex == questions.length - 1) {
+      // Prepare navigation *before* the API call, so we can use `await` on the API call
+      // and navigate immediately after the API call completes.
       navigateAfterSubmission = Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) => const AfterQuizSplash(),
         ),
       );
     } else {
+      // If somehow this is called before the last question, do nothing.
       navigateAfterSubmission = Future.value();
     }
     // --- End Navigation Logic ---
+
 
     try
     {
@@ -61,7 +66,7 @@ class _QuizScreenState extends State<QuizScreen> {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",
         },
-        body: jsonEncode(submittedAnswers),
+        body: jsonEncode(submittedAnswers), // MUST be array
       );
 
       print("Status Code: ${response.statusCode}");
@@ -84,11 +89,13 @@ class _QuizScreenState extends State<QuizScreen> {
       );
     }
 
+    // Now navigate to the splash screen.
+    // We are using `pushReplacement` so the user cannot go back to the quiz.
     await navigateAfterSubmission;
   }
-  */
 
-  final List<Map<String, dynamic>> questions = [
+  final List<Map<String, dynamic>> questions =
+  [
     {
       "questionId": 1,
       "questionText": "What is my primary investment goal right now?",
@@ -140,16 +147,16 @@ class _QuizScreenState extends State<QuizScreen> {
         "Somewhat stable but stressed",
         "Stable",
         "Very stable with low liabilities",
-        "Extremely stable with strong savings"
+        "Stable with strong savings"
       ]
     },
     {
       "questionId": 6,
       "questionText": "Do I have an emergency fund covering at least 3–6 months of expenses?",
       "options": [
-        "No",
+        "Yes",
         "Partially",
-        "Yes"
+        "No"
       ]
     },
     {
@@ -304,7 +311,8 @@ class _QuizScreenState extends State<QuizScreen> {
         "Desire for fast high returns"
       ]
     }
-  ];
+  ]
+  ;
 
   int currentIndex = 0;
   String? selectedOption;
@@ -320,11 +328,13 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
+  // Dispose of the audio player when the widget is removed
   @override
   void dispose() {
     _audioPlayer.dispose();
     super.dispose();
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -459,7 +469,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     ),
                     onPressed: selectedOption == null
                         ? null
-                        : () async {
+                        : () async { // Changed to async to await API call and navigation
                       // Save current question answer
                       submittedAnswers.add({
                         "questionId": currentQuestion["questionId"],
@@ -474,20 +484,10 @@ class _QuizScreenState extends State<QuizScreen> {
                         });
                       } else {
                         print("Submitted Answers: $submittedAnswers");
-
-                        // --- Backend call commented out ---
-                        /*
-                        await submitQuizToBackend();
-                        */
-
-                        // Optional: Navigate locally to AfterQuizSplash if needed
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            builder: (context) => const AfterQuizSplash(),
-                          ),
-                        );
+                        await submitQuizToBackend(); // Await API call and navigation
                       }
                     },
+
                     child: Text(
                       currentIndex == questions.length - 1 ? "Finish" : "Next",
                       style: const TextStyle(
