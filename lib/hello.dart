@@ -16,9 +16,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   final List<Map<String, dynamic>> pages = [
     // 🔹 FIRST PAGE — LOGO
-    {
-      "type": "logo",
-    },
+    {"type": "logo"},
 
     // 🔹 ONBOARDING PAGES
     {
@@ -53,7 +51,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   void _startAutoSlide() {
     _timer?.cancel();
 
-    // 🔹 FIRST delay longer (logo screen)
+    // 🔹 Delay for first page (logo) longer
     Duration delay =
     currentIndex == 0 ? const Duration(seconds: 5) : const Duration(seconds: 3);
 
@@ -72,8 +70,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         curve: Curves.easeInOut,
       );
 
-      // Restart timer with correct delay for next page
-      _startAutoSlide();
+      _startAutoSlide(); // restart timer
     });
   }
 
@@ -91,23 +88,6 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       body: SafeArea(
         child: Column(
           children: [
-            // Skip
-            Align(
-              alignment: Alignment.topRight,
-              child: TextButton(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => const SignupScreen()),
-                  );
-                },
-                child: const Text(
-                  "Skip",
-                  style: TextStyle(color: Colors.white70),
-                ),
-              ),
-            ),
-
             // Pages
             Expanded(
               child: PageView.builder(
@@ -115,7 +95,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                 itemCount: pages.length,
                 onPageChanged: (index) {
                   setState(() => currentIndex = index);
-                  _startAutoSlide(); // 🔹 reset timing on manual swipe
+                  _startAutoSlide(); // reset timer
                 },
                 itemBuilder: (context, index) {
                   if (pages[index]["type"] == "logo") {
@@ -130,11 +110,12 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               ),
             ),
 
+            // Page indicator
             _indicator(),
 
             const SizedBox(height: 20),
 
-            // Get Started
+            // Get Started button (always visible)
             Padding(
               padding: const EdgeInsets.only(bottom: 30),
               child: SizedBox(
@@ -170,7 +151,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     );
   }
 
-  // 🔹 LOGO PAGE
+  // 🔹 Logo Page
   Widget _logoPage() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -180,7 +161,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 40),
           child: Text(
-            "Smart, personalized, and Shariah-aware investment guidance.",
+            "Personalized investment guidance, aligned with Shariah values.",
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
@@ -193,7 +174,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     );
   }
 
-  // 🔹 CONTENT PAGES
+  // 🔹 Content Page
   Widget _buildPage(IconData icon, String title, String subtitle) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 30),
@@ -234,7 +215,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     );
   }
 
-  // 🔹 INDICATOR
+  // 🔹 Page Indicator
   Widget _indicator() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -246,9 +227,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           width: currentIndex == index ? 20 : 8,
           height: 8,
           decoration: BoxDecoration(
-            color: currentIndex == index
-                ? const Color(0xFF6E4BD8)
-                : Colors.white24,
+            color: currentIndex == index ? const Color(0xFF6E4BD8) : Colors.white24,
             borderRadius: BorderRadius.circular(10),
           ),
         ),

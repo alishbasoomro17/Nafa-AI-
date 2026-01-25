@@ -27,7 +27,7 @@ class AfterQuizSplash extends StatelessWidget {
                     SizedBox(height: 20),
                     // Title
                     Text(
-                      "Quiz Complete!",
+                      "Quiz Completed!",
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 28,

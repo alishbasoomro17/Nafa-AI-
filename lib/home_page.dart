@@ -1,43 +1,69 @@
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'recommendation_page.dart';
 import 'customer_support_page.dart';
 import 'profile_page.dart';
 import 'GuidelinesPage.dart';
+import 'course_page.dart'; // New page import
 
 const Color greenMain = Color(0xFFAAF308);
 const Color purpleAccent = Color(0xFF6E4BD8);
 
 class HomePage extends StatelessWidget {
-const HomePage({super.key});
+  const HomePage({super.key});
 
-@override
-Widget build(BuildContext context) {
-return Scaffold(
-backgroundColor: Colors.black,
-// Removed AppBar from here to eliminate the top space
-body: SingleChildScrollView(
-padding: const EdgeInsets.all(16),
-child: Column(
-crossAxisAlignment: CrossAxisAlignment.start,
-children: [
-// Added a small top padding to avoid sticking to the very edge of the screen/status bar
-const SizedBox(height: 40),
-_welcomeCard(),
-const SizedBox(height: 20),
-_profileBox(context),
-const SizedBox(height: 20),
-_actionGrid(context),
-const SizedBox(height: 20),
-_learningBox(context),
-],
-),
-),
-bottomNavigationBar: _bottomNavBar(context, 0),
-);
-}
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        elevation: 0,
+        title: const Text("", style: TextStyle(color: greenMain, fontWeight: FontWeight.bold)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications, color: purpleAccent),
+            onPressed: () {
+              _playClickSound();
+              // Add Notifications page if needed
+              // Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
+            },
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            _welcomeCard(),
+            const SizedBox(height: 20),
+            _profileBox(context),
+            const SizedBox(height: 20),
+            _actionGrid(context),
+            const SizedBox(height: 20),
+            _learningModule(context), // Both Learning Module and Financial Course inside
+          ],
+        ),
+      ),
+      bottomNavigationBar: _bottomNavBar(context, 0),
+    );
+  }
 }
 
-/* ---------------- WELCOME BOX ---------------- */
+/* ---------------- AUDIO PLAYER ---------------- */
+final AudioPlayer _audioPlayer = AudioPlayer();
+
+void _playClickSound() async {
+  try {
+    await _audioPlayer.play(AssetSource('success.mp3'));
+  } catch (e) {
+    debugPrint("Error playing sound: $e");
+  }
+}
+
+/* ---------------- WELCOME CARD ---------------- */
 Widget _welcomeCard() {
   return Container(
     width: double.infinity,
@@ -58,11 +84,7 @@ Widget _welcomeCard() {
       children: [
         Text(
           "Welcome to Nafa AI",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
         ),
         SizedBox(height: 8),
         Text(
@@ -99,13 +121,7 @@ Widget _profileBox(BuildContext context) {
   );
 }
 
-Widget _profileTile(
-    BuildContext context,
-    IconData icon,
-    String title,
-    String value,
-    String detail,
-    ) {
+Widget _profileTile(BuildContext context, IconData icon, String title, String value, String detail) {
   return Card(
     color: Colors.white10,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -115,7 +131,10 @@ Widget _profileTile(
       title: Text(title, style: const TextStyle(color: Colors.white)),
       subtitle: Text(value, style: const TextStyle(color: Colors.white70)),
       trailing: const Icon(Icons.arrow_forward_ios, color: Colors.white38, size: 16),
-      onTap: () => _infoDialog(context, title, detail),
+      onTap: () {
+        _playClickSound();
+        _infoDialog(context, title, detail);
+      },
     ),
   );
 }
@@ -129,10 +148,8 @@ Widget _actionGrid(BuildContext context) {
         title: "Recommendations",
         color: purpleAccent,
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const RecommendationPage()),
-          );
+          _playClickSound();
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const RecommendationPage()));
         },
       ),
       const SizedBox(width: 12),
@@ -141,10 +158,8 @@ Widget _actionGrid(BuildContext context) {
         title: "Customer Support",
         color: greenMain,
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const CustomerSupportPage()),
-          );
+          _playClickSound();
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const CustomerSupportPage()));
         },
       ),
     ],
@@ -177,12 +192,9 @@ Widget _actionBox({
           children: [
             Icon(icon, color: color, size: 32),
             const SizedBox(height: 8),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
-            ),
+            Text(title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14)),
           ],
         ),
       ),
@@ -190,47 +202,72 @@ Widget _actionBox({
   );
 }
 
-/* ---------------- LEARNING MODULE ---------------- */
-Widget _learningBox(BuildContext context) {
+/* ---------------- LEARNING MODULE WITH FINANCIAL COURSE ---------------- */
+Widget _learningModule(BuildContext context) {
   return _sectionBox(
     title: "Learning Module",
-    child: GestureDetector(
-      onTap: () {
-        Navigator.push(
+    child: Column(
+      children: [
+        // Learning Module Box
+        _moduleBox(
           context,
-          MaterialPageRoute(builder: (_) => const GuidelinesPage()),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white10,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: purpleAccent),
+          icon: Icons.school,
+          title: "Stock Market Basics",
+          onTap: () {
+            _playClickSound();
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const GuidelinesPage()));
+          },
         ),
-        child: Row(
-          children: [
-            const Icon(Icons.school, color: purpleAccent, size: 30),
-            const SizedBox(width: 16),
-            const Expanded(
-              child: Text(
-                "Start Learning",
-                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: purpleAccent,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Text(
-                "Go",
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
+        const SizedBox(height: 16),
+        // Financial Beginner Course Box
+        _moduleBox(
+          context,
+          icon: Icons.monetization_on,
+          title: "Stock 101 Beginner Course",
+          onTap: () {
+            _playClickSound();
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const FinancialCoursePage()));
+          },
         ),
+      ],
+    ),
+  );
+}
+
+/* ---------------- MODULE BOX (Reusable for Learning / Financial) ---------------- */
+Widget _moduleBox(BuildContext context,
+    {required IconData icon, required String title, required VoidCallback onTap}) {
+  return GestureDetector(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white10,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: purpleAccent),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: purpleAccent, size: 30),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: purpleAccent,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Text(
+              "Go",
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
       ),
     ),
   );
@@ -249,11 +286,8 @@ Widget _sectionBox({Widget? titleWidget, required Widget child, String? title}) 
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         titleWidget ??
-            Text(
-              title ?? '',
-              style: const TextStyle(
-                  color: greenMain, fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            Text(title ?? '',
+                style: const TextStyle(color: greenMain, fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 12),
         child,
       ],
@@ -288,35 +322,29 @@ Widget _bottomNavBar(BuildContext context, int currentIndex) {
     currentIndex: currentIndex,
     type: BottomNavigationBarType.fixed,
     onTap: (index) {
+      _playClickSound();
+
+      if (index == currentIndex) return;
+
       switch (index) {
         case 0:
-          Navigator.pushReplacement(
-              context, MaterialPageRoute(builder: (_) => const HomePage()));
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomePage()));
           break;
         case 1:
-          Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                  builder: (_) => const RecommendationPage()));
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const RecommendationPage()));
           break;
         case 2:
-          Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                  builder: (_) => const CustomerSupportPage()));
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const CustomerSupportPage()));
           break;
         case 3:
-          Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const ProfilePage()));
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const ProfilePage()));
           break;
       }
     },
     items: const [
       BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
       BottomNavigationBarItem(icon: Icon(Icons.star), label: "Recommendation"),
-      BottomNavigationBarItem(
-          icon: Icon(Icons.support_agent), label: "Support"),
+      BottomNavigationBarItem(icon: Icon(Icons.support_agent), label: "Support"),
       BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
     ],
   );

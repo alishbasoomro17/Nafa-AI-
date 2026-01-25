@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'home_page.dart';
-import 'recommendation_page.dart';
-import 'customer_support_page.dart';
 import 'signup.dart';
+import 'customer_support_page.dart';
+import 'recommendation_page.dart';
 
 const Color purpleAccent = Color(0xFF6E4BD8);
 const Color greenMain = Color(0xFFAAF308);
@@ -17,163 +18,297 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   String username = "Shehnila Narejo";
   String email = "shehnila@example.com";
-  String profilePic = "";
+
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  @override
+  void initState() {
+    super.initState();
+    usernameController.text = username;
+    emailController.text = email;
+  }
+
+  @override
+  void dispose() {
+    usernameController.dispose();
+    emailController.dispose();
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  void _playClickSound() async {
+    try {
+      await _audioPlayer.play(AssetSource('success.mp3'));
+    } catch (e) {
+      debugPrint("Error playing sound: $e");
+    }
+  }
+
+  void _updateField(TextEditingController controller, String field) {
+    _playClickSound();
+    setState(() {
+      if (field == "username") username = controller.text;
+      if (field == "email") email = controller.text;
+    });
+  }
+
+  void _showUpdatePrompt(String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: greenMain, width: 2),
+        ),
+        content: SizedBox(
+          width: 200,
+          height: 120,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.check_circle, color: greenMain, size: 48),
+              const SizedBox(height: 12),
+              Text(
+                message,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      Navigator.of(context).pop();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 0,
-        centerTitle: true,
-        automaticallyImplyLeading: false, // Removed default back arrow
-        title: const Text(
-          "",
-          style: TextStyle(color: Colors.white),
-          
-        ),
-      ),
+      appBar: _appBar(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // PROFILE IMAGE
-            Stack(
-              children: [
-                CircleAvatar(
-                  radius: 60,
-                  backgroundColor: Colors.grey[900],
-                  child: const Icon(Icons.person, size: 60, color: Colors.white),
-                ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: GestureDetector(
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Feature coming soon")),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: const BoxDecoration(
-                        color: purpleAccent,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.edit, size: 18, color: Colors.white),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            _avatar(),
             const SizedBox(height: 30),
-            _infoField("Username", username),
-            const SizedBox(height: 18),
-            _infoField("Email", email),
-            const SizedBox(height: 18),
-            _optionButton("Change Password", Icons.lock, () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Feature coming soon")),
-              );
+            _editableInfoField(
+                label: "Username",
+                controller: usernameController,
+                fieldName: "username"),
+            const SizedBox(height: 16),
+            _editableInfoField(
+                label: "Email",
+                controller: emailController,
+                fieldName: "email"),
+            const SizedBox(height: 24),
+            // ================== Options ==================
+            _optionButton("Notifications", Icons.notifications, () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const NotificationsScreen()));
             }),
-            const SizedBox(height: 18),
-            _optionButton("Privacy Policy", Icons.privacy_tip, () {
+            const SizedBox(height: 16),
+            _optionButton("Change Password", Icons.lock, () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => const PrivacyPolicyScreen(),
+                  builder: (_) =>
+                      ChangePasswordScreen(onSuccess: _passwordUpdated),
                 ),
               );
             }),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
+            _optionButton("FAQs", Icons.help_outline, () {
+              Navigator.push(
+                  context, MaterialPageRoute(builder: (_) => const FaqsScreen()));
+            }),
+            const SizedBox(height: 16),
+            _optionButton("Share App", Icons.share, () {
+              // TODO: implement share functionality
+            }),
+            const SizedBox(height: 16),
             _optionButton("Delete Account", Icons.delete_forever, () {
-              _showConfirmationDialog(
-                context,
+              _confirmDialog(
                 title: "Delete Account",
                 content: "Are you sure you want to delete your account?",
                 onConfirm: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => const SignupScreen()),
-                  );
+                  Navigator.pushReplacement(context,
+                      MaterialPageRoute(builder: (_) => const SignupScreen()));
                 },
               );
             }),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
             _optionButton("Logout", Icons.logout, () {
-              _showConfirmationDialog(
-                context,
+              _confirmDialog(
                 title: "Logout",
                 content: "Are you sure you want to logout?",
                 onConfirm: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => const SignupScreen()),
-                  );
+                  Navigator.pushReplacement(context,
+                      MaterialPageRoute(builder: (_) => const SignupScreen()));
                 },
               );
             }),
           ],
         ),
       ),
-      bottomNavigationBar: _bottomNavBar(context, 3),
+      bottomNavigationBar: _bottomNavBar(context, 3, _playClickSound),
     );
   }
 
-  Widget _infoField(String label, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: purpleAccent.withOpacity(0.5)),
+  AppBar _appBar() {
+    return AppBar(
+      backgroundColor: Colors.black,
+      elevation: 0,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        onPressed: () {
+          _playClickSound();
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const HomePage()),
+          );
+        },
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      title: const Text(
+        "Profile",
+        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  Widget _avatar() {
+    return Stack(
+      children: [
+        const CircleAvatar(
+          radius: 60,
+          backgroundColor: purpleAccent,
+          child: Icon(Icons.person, size: 60, color: Colors.white),
+        ),
+        Positioned(
+          bottom: 0,
+          right: 0,
+          child: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: const BoxDecoration(
+              color: purpleAccent,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.edit, size: 18, color: Colors.white),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _editableInfoField({
+    required String label,
+    required TextEditingController controller,
+    required String fieldName,
+  }) {
+    bool editing = false;
+
+    return StatefulBuilder(
+      builder: (context, setStateSB) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: _boxDecoration(),
+          child: Row(
             children: [
-              Text(label,
-                  style: const TextStyle(color: Colors.white70, fontSize: 13)),
-              const SizedBox(height: 4),
-              Text(value,
-                  style: const TextStyle(color: Colors.white, fontSize: 16)),
+              Expanded(
+                child: editing
+                    ? TextField(
+                  controller: controller,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: label,
+                    hintStyle: const TextStyle(color: Colors.white54),
+                    filled: true,
+                    fillColor: Colors.grey[900],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                )
+                    : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label,
+                        style: const TextStyle(
+                            color: Colors.white70, fontSize: 13)),
+                    const SizedBox(height: 4),
+                    Text(controller.text,
+                        style: const TextStyle(
+                            color: Colors.white, fontSize: 16)),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: Icon(
+                  editing ? Icons.check : Icons.edit,
+                  color: editing ? greenMain : purpleAccent,
+                ),
+                onPressed: () {
+                  if (editing) {
+                    _updateField(controller, fieldName);
+                    _showUpdatePrompt("$label updated successfully");
+                  }
+                  setStateSB(() {
+                    editing = !editing;
+                  });
+                },
+              ),
             ],
           ),
-          const Icon(Icons.edit, color: purpleAccent),
-        ],
-      ),
+        );
+      },
     );
   }
 
   Widget _optionButton(String title, IconData icon, VoidCallback onTap) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        _playClickSound();
+        onTap();
+      },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.grey[900],
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: purpleAccent.withOpacity(0.5)),
-        ),
+        padding: const EdgeInsets.all(16),
+        decoration: _boxDecoration(),
         child: Row(
           children: [
             Icon(icon, color: purpleAccent),
             const SizedBox(width: 12),
-            Text(title,
-                style: const TextStyle(color: Colors.white, fontSize: 15)),
+            Text(title, style: const TextStyle(color: Colors.white, fontSize: 15)),
           ],
         ),
       ),
     );
   }
 
-  void _showConfirmationDialog(BuildContext context,
+  BoxDecoration _boxDecoration() {
+    return BoxDecoration(
+      color: Colors.grey[900],
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(color: purpleAccent.withOpacity(0.5)),
+    );
+  }
+
+  void _confirmDialog(
       {required String title,
-      required String content,
-      required VoidCallback onConfirm}) {
+        required String content,
+        required VoidCallback onConfirm}) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -190,18 +325,53 @@ class _ProfilePageState extends State<ProfilePage> {
               Navigator.pop(context);
               onConfirm();
             },
-            child: const Text("Yes", style: TextStyle(color: Color(0xFFAAF308))),
+            child: const Text("Yes", style: TextStyle(color: greenMain)),
           ),
         ],
       ),
     );
   }
+
+  void _passwordUpdated() {
+    Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: (_) => const ProfilePage()));
+  }
 }
 
-// =================== MODERN PRIVACY POLICY ===================
+/* ================= CHANGE PASSWORD SCREEN ================= */
+class ChangePasswordScreen extends StatefulWidget {
+  final VoidCallback onSuccess;
+  const ChangePasswordScreen({super.key, required this.onSuccess});
 
-class PrivacyPolicyScreen extends StatelessWidget {
-  const PrivacyPolicyScreen({super.key});
+  @override
+  State<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
+}
+
+class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
+  bool showNew = false;
+  bool showConfirm = false;
+
+  final TextEditingController currentController = TextEditingController();
+  final TextEditingController newController = TextEditingController();
+  final TextEditingController confirmController = TextEditingController();
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  @override
+  void dispose() {
+    currentController.dispose();
+    newController.dispose();
+    confirmController.dispose();
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  void _playClickSound() async {
+    try {
+      await _audioPlayer.play(AssetSource('success.mp3'));
+    } catch (e) {
+      debugPrint("Error playing sound: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -209,151 +379,273 @@ class PrivacyPolicyScreen extends StatelessWidget {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        automaticallyImplyLeading: false,
-        title: Row(
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text("Change Password",
+            style: TextStyle(color: Colors.white)),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
           children: [
-            GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: const Icon(Icons.arrow_back_ios_new,
-                  size: 20, color: greenMain),
+            _passwordField("Current Password", controller: currentController),
+            const SizedBox(height: 16),
+            _passwordField(
+              "New Password",
+              controller: newController,
+              isVisible: showNew,
+              toggle: () => setState(() => showNew = !showNew),
             ),
-            const SizedBox(width: 8),
-            const Text("Privacy Policy",
-                style: TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            _passwordField(
+              "Confirm New Password",
+              controller: confirmController,
+              isVisible: showConfirm,
+              toggle: () => setState(() => showConfirm = !showConfirm),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: 220,
+              height: 48,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: greenMain,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                onPressed: _updatePassword,
+                child: const Text(
+                  "Update Password",
+                  style: TextStyle(
+                      color: Colors.black, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _passwordField(String hint,
+      {bool isVisible = false, VoidCallback? toggle, required TextEditingController controller}) {
+    return TextField(
+      controller: controller,
+      obscureText: !isVisible,
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(color: Colors.white54),
+        filled: true,
+        fillColor: Colors.grey[900],
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+        suffixIcon: toggle != null
+            ? IconButton(
+          icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off,
+              color: Colors.white70),
+          onPressed: toggle,
+        )
+            : null,
+      ),
+    );
+  }
+
+  void _updatePassword() {
+    _playClickSound();
+    _showSuccessDialog();
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: greenMain, width: 2),
+        ),
+        content: SizedBox(
+          width: 200,
+          height: 120,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.check_circle, color: greenMain, size: 48),
+              const SizedBox(height: 12),
+              const Text(
+                "Password Updated successfully",
+                style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      Navigator.pop(context);
+      widget.onSuccess();
+    });
+  }
+}
+
+/* ================== NOTIFICATIONS SCREEN ================== */
+class NotificationsScreen extends StatelessWidget {
+  const NotificationsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text("Notifications", style: TextStyle(color: Colors.white)),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
-        children: const [
-          ModernPolicyCard(
-            title: "What is Nafa AI?",
-            content:
-                "Nafa AI is a smart financial assistant that helps users make informed investment decisions.",
-          ),
-          SizedBox(height: 16),
-          ModernPolicyCard(
-            title: "How is your data used?",
-            content:
-                "Your data is securely stored and used only to improve your experience.",
-          ),
-          SizedBox(height: 16),
-          ModernPolicyCard(
-            title: "Contact Us",
-            content: "Phone: +92 300 1234567\nEmail: support@nafa.ai",
-          ),
-          SizedBox(height: 16),
-          ModernPolicyCard(
-            title: "Security Policy",
-            content:
-                "We follow industry standards to protect your personal information.",
-          ),
+        children: [
+          _notificationCard("Welcome!", "Thank you for joining Nafa AI!"),
+          const SizedBox(height: 12),
+          _notificationCard("New Feature", "Check out the latest recommendations feature."),
+        ],
+      ),
+    );
+  }
+
+  Widget _notificationCard(String title, String content) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: purpleAccent.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+          const SizedBox(height: 6),
+          Text(content, style: const TextStyle(color: Colors.white70, fontSize: 14)),
         ],
       ),
     );
   }
 }
 
-class ModernPolicyCard extends StatefulWidget {
-  final String title;
-  final String content;
-
-  const ModernPolicyCard({super.key, required this.title, required this.content});
+/* ================= FAQs SCREEN ================= */
+class FaqsScreen extends StatelessWidget {
+  const FaqsScreen({super.key});
 
   @override
-  State<ModernPolicyCard> createState() => _ModernPolicyCardState();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text("FAQs", style: TextStyle(color: Colors.white)),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: const [
+          FaqCard("What is Nafa AI?", "NAFA IA is a stock investment recommendation app that provides personalized stock recommendations based on your profile."),
+          FaqCard("Can I perform transactions through NAFA IA?", "No, NAFA IA only provides stock recommendations. It does not allow buying or selling of stocks."),
+          FaqCard("How are the recommendations personalized?", "The app analyzes your investment profile and suggests stocks that suit your preferences and risk level."),
+          FaqCard("Is NAFA IA easy to use?", "Absolutely! NAFA IA is designed to be simple and user-friendly, making it easy for anyone to get personalized stock recommendations."),
+          FaqCard("Can I learn about stock investing through the app?", "Yes, NAFA IA has a learning module where you can easily learn about investing and how to use the app effectively."),
+          FaqCard("How do I contact for app realted issues", "You can contact customer support via WhatsApp at 0318-8975730 for any queries or app-related issues."),
+          FaqCard("Who can I contact for financial details?", "For any financial-related questions, you can use support feature"),
+          FaqCard("What if I forgot my password?", "You can reset your password directly from the signup page."),
+
+        ],
+      ),
+    );
+  }
 }
 
-class _ModernPolicyCardState extends State<ModernPolicyCard>
-    with SingleTickerProviderStateMixin {
-  bool _isExpanded = false;
-  late final AnimationController _controller;
-  late final Animation<double> _arrowAnimation;
+class FaqCard extends StatefulWidget {
+  final String title;
+  final String content;
+  const FaqCard(this.title, this.content, {super.key});
 
   @override
-  void initState() {
-    super.initState();
-    _controller =
-        AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
-    _arrowAnimation = Tween<double>(begin: 0, end: 0.5).animate(_controller);
-  }
+  State<FaqCard> createState() => _FaqCardState();
+}
 
-  void _toggleExpand() {
-    setState(() {
-      _isExpanded = !_isExpanded;
-      _isExpanded ? _controller.forward() : _controller.reverse();
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+class _FaqCardState extends State<FaqCard> {
+  bool open = false;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: _toggleExpand,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
+      onTap: () => setState(() => open = !open),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.grey[900],
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: purpleAccent.withOpacity(0.3),
-              blurRadius: 6,
-              offset: const Offset(0, 3),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: purpleAccent.withOpacity(0.3)),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Expanded(
-                  child: Text(
-                    widget.title,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold),
-                  ),
+                  child: Text(widget.title,
+                      style: const TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
-                RotationTransition(
-                  turns: _arrowAnimation,
-                  child: const Icon(Icons.keyboard_arrow_down,
-                      color: purpleAccent, size: 26),
-                )
+                Icon(open ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                    color: purpleAccent),
               ],
             ),
-            const SizedBox(height: 8),
-            AnimatedCrossFade(
-              firstChild: Container(),
-              secondChild: Text(
-                widget.content,
-                style: const TextStyle(color: Colors.white70, fontSize: 14),
+            if (open)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(widget.content,
+                    style: const TextStyle(color: Colors.white70)),
               ),
-              crossFadeState: _isExpanded
-                  ? CrossFadeState.showSecond
-                  : CrossFadeState.showFirst,
-              duration: const Duration(milliseconds: 200),
-            ),
           ],
         ),
       ),
     );
   }
 }
+/* ================= AUDIO PLAYER ================= */
+final AudioPlayer _audioPlayer = AudioPlayer();
 
-// =================== BOTTOM NAV ===================
+void _playSound() async {
+  try {
+    // Play your tune here
+    await _audioPlayer.play(AssetSource('tune.mp3'));
+  } catch (e) {
+    debugPrint("Error playing tune: $e");
+  }
+}
 
-Widget _bottomNavBar(BuildContext context, int currentIndex) {
+/* ================= BOTTOM NAVIGATION WITH SOUND ================= */
+Widget _bottomNavBar(BuildContext context, int currentIndex, VoidCallback playSound) {
   return BottomNavigationBar(
     backgroundColor: Colors.black,
     selectedItemColor: greenMain,
@@ -361,7 +653,11 @@ Widget _bottomNavBar(BuildContext context, int currentIndex) {
     currentIndex: currentIndex,
     type: BottomNavigationBarType.fixed,
     onTap: (index) {
+      // 🔊 Play the tune for every tab tap
+      playSound();
+
       if (index == currentIndex) return;
+
       switch (index) {
         case 0:
           Navigator.pushReplacement(
@@ -369,13 +665,11 @@ Widget _bottomNavBar(BuildContext context, int currentIndex) {
           break;
         case 1:
           Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const RecommendationPage()));
+              context, MaterialPageRoute(builder: (_) => const RecommendationPage()));
           break;
         case 2:
           Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const CustomerSupportPage()));
+              context, MaterialPageRoute(builder: (_) => const CustomerSupportPage()));
           break;
         case 3:
           Navigator.pushReplacement(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'home_page.dart';
 import 'recommendation_page.dart';
 import 'profile_page.dart';
@@ -15,38 +16,68 @@ class CustomerSupportPage extends StatefulWidget {
 
 class _CustomerSupportPageState extends State<CustomerSupportPage> {
   final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  void _playSound() async {
+    try {
+      await _audioPlayer.play(AssetSource('success.mp3'));
+    } catch (e) {
+      debugPrint("Error playing sound: $e");
+    }
+  }
+
+  // Messages list (newest at index 0)
   final List<Map<String, dynamic>> messages = [
     {
       "from": "advisor",
-      "text": "Hello 👋 I’m your financial advisor. How can I help you?",
+      "text": "Hello 👋 I’m your financial advisor. How can I help you today?",
       "isImage": false,
     },
   ];
 
-  void _sendMessage({String? text, bool isImage = false}) {
-    if ((text == null || text.isEmpty) && !isImage) return;
+  void _sendMessage({String? text}) {
+    if (text == null || text.trim().isEmpty) return;
 
+    // Add user message
     setState(() {
-      messages.add({
-        "from": "customer",
-        "text": text,
-        "isImage": isImage,
-      });
-
-      messages.add({
-        "from": "advisor",
-        "text": "Thanks for reaching out. Please share more details.",
-        "isImage": false,
-      });
+      messages.insert(0, {"from": "customer", "text": text, "isImage": false});
     });
 
     _messageController.clear();
+    _scrollToTop();
+
+    // Add AI reply after delay
+    Future.delayed(const Duration(milliseconds: 300), () {
+      setState(() {
+        messages.insert(0, {
+          "from": "advisor",
+          "text": "Thanks for reaching out! Can you provide more details?",
+          "isImage": false,
+        });
+      });
+      _scrollToTop();
+    });
+  }
+
+  void _scrollToTop() {
+    Future.delayed(const Duration(milliseconds: 50), () {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   @override
   void dispose() {
     _messageController.dispose();
+    _scrollController.dispose();
+    _audioPlayer.dispose();
     super.dispose();
   }
 
@@ -56,125 +87,184 @@ class _CustomerSupportPageState extends State<CustomerSupportPage> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        title: const Text(
-          "",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
         elevation: 0,
+        automaticallyImplyLeading: false,
+        title: Row(
+          children: [
+            GestureDetector(
+              onTap: () {
+                _playSound();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HomePage()),
+                );
+              },
+              child: const Icon(Icons.arrow_back, color: Colors.white, size: 26),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              "Customer Support",
+              style: TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+            ),
+          ],
+        ),
       ),
       body: Column(
         children: [
+          // Messages list (reversed)
           Expanded(
             child: ListView.builder(
+              reverse: true,
+              controller: _scrollController,
               padding: const EdgeInsets.all(12),
               itemCount: messages.length,
               itemBuilder: (context, index) {
                 final msg = messages[index];
                 final isCustomer = msg["from"] == "customer";
 
-                return Align(
-                  alignment:
-                      isCustomer ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    padding: const EdgeInsets.all(14),
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.75,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: isCustomer
-                          ? LinearGradient(
-                              colors: [greenMain.withOpacity(0.8), greenMain],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            )
-                          : LinearGradient(
-                              colors: [Colors.grey[850]!, Colors.grey[900]!],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                      borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(16),
-                        topRight: const Radius.circular(16),
-                        bottomLeft: Radius.circular(isCustomer ? 16 : 4),
-                        bottomRight: Radius.circular(isCustomer ? 4 : 16),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
-                          offset: const Offset(2, 2),
-                          blurRadius: 4,
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    mainAxisAlignment: isCustomer
+                        ? MainAxisAlignment.end
+                        : MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      // AI avatar
+                      if (!isCustomer)
+                        CircleAvatar(
+                          radius: 16,
+                          backgroundColor: Colors.grey[850],
+                          child: const Icon(
+                            Icons.support_agent,
+                            color: greenMain,
+                            size: 24,
+                          ),
                         ),
-                      ],
-                    ),
-                    child: msg["isImage"]
-                        ? const Icon(Icons.image, size: 40, color: Colors.white)
-                        : Text(
+                      if (!isCustomer) const SizedBox(width: 8),
+                      // Message bubble
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: isCustomer ? purpleAccent : Colors.grey[850],
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.3),
+                                offset: const Offset(2, 2),
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
+                          child: Text(
                             msg["text"],
                             style: TextStyle(
-                              color: isCustomer ? Colors.black : Colors.white,
+                              color: isCustomer ? Colors.white : Colors.white70,
                               fontSize: 16,
                             ),
                           ),
+                        ),
+                      ),
+                      if (isCustomer) const SizedBox(width: 8),
+                      // User avatar
+                      if (isCustomer)
+                        const CircleAvatar(
+                          radius: 16,
+                          backgroundColor: purpleAccent,
+                          child: Icon(Icons.person, color: Colors.white, size: 18),
+                        ),
+                    ],
                   ),
                 );
               },
             ),
           ),
+
+          // Input field
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.grey[900],
-              border: Border(
-                top: BorderSide(color: Colors.grey[800]!, width: 1.5),
-              ),
-            ),
+            padding: const EdgeInsets.all(8),
+            color: Colors.grey[900],
             child: Row(
               children: [
-                IconButton(
-                  icon: const Icon(Icons.image, color: purpleAccent),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Feature coming soon")),
-                    );
-                  },
-                ),
                 Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[850],
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: TextField(
-                      controller: _messageController,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(
-                        hintText: "Type your message...",
-                        hintStyle: TextStyle(color: Colors.white70),
-                        border: InputBorder.none,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 120),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[850],
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 4),
+                            child: Icon(Icons.image, color: purpleAccent),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: TextField(
+                              controller: _messageController,
+                              maxLines: null,
+                              textInputAction: TextInputAction.newline,
+                              style: const TextStyle(color: Colors.white),
+                              decoration: const InputDecoration(
+                                hintText: "Type a message...",
+                                hintStyle: TextStyle(color: Colors.white70),
+                                border: InputBorder.none,
+                                isDense: true,
+                                contentPadding:
+                                EdgeInsets.symmetric(vertical: 10),
+                              ),
+                              onSubmitted: (value) {
+                                _sendMessage(text: value);
+                              },
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              _sendMessage(text: _messageController.text);
+                            },
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 4),
+                              child: Icon(Icons.send, color: purpleAccent),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.send, color: purpleAccent),
-                  onPressed: () {
-                    _sendMessage(text: _messageController.text);
-                  },
                 ),
               ],
             ),
           ),
         ],
       ),
-      bottomNavigationBar: _bottomNavBar(context, 2),
+      bottomNavigationBar: _bottomNavBar(context, 2, _playSound),
     );
   }
 }
 
-Widget _bottomNavBar(BuildContext context, int currentIndex) {
+// Bottom navigation with sound
+// AudioPlayer instance
+final AudioPlayer _audioPlayer = AudioPlayer();
+
+// Function to play click sound
+void _playClickSound() async {
+  try {
+    await _audioPlayer.play(AssetSource('success.mp3')); // your tune here
+  } catch (e) {
+    debugPrint("Error playing sound: $e");
+  }
+}
+
+// Bottom navigation with sound
+Widget _bottomNavBar(
+    BuildContext context, int currentIndex, VoidCallback playSound) {
   return BottomNavigationBar(
     backgroundColor: Colors.black,
     selectedItemColor: greenMain,
@@ -182,6 +272,12 @@ Widget _bottomNavBar(BuildContext context, int currentIndex) {
     currentIndex: currentIndex,
     type: BottomNavigationBarType.fixed,
     onTap: (index) {
+      // 🔊 Play the tune whenever a tab is tapped
+      playSound();
+
+      // Do nothing if tapping the current tab
+      if (index == currentIndex) return;
+
       switch (index) {
         case 0:
           Navigator.pushReplacement(
@@ -208,8 +304,7 @@ Widget _bottomNavBar(BuildContext context, int currentIndex) {
     items: const [
       BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
       BottomNavigationBarItem(icon: Icon(Icons.star), label: "Recommendation"),
-      BottomNavigationBarItem(
-          icon: Icon(Icons.support_agent), label: "Support"),
+      BottomNavigationBarItem(icon: Icon(Icons.support_agent), label: "Support"),
       BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
     ],
   );

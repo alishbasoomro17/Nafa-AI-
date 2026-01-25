@@ -3,10 +3,8 @@ import 'package:audioplayers/audioplayers.dart';
 import 'fund_page.dart';
 import 'home_page.dart';
 
-// Brand Colors
-const Color greenMain = Color(0xFFAAF308);
 const Color purpleAccent = Color(0xFF6E4BD8);
-const Color surfaceDark = Color(0xFF1B1B2B);
+const Color greenMain = Color(0xFFAAF308);
 
 class RecommendationScreen extends StatefulWidget {
   const RecommendationScreen({super.key});
@@ -73,7 +71,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   Color _riskColor(String risk) {
     switch (risk) {
       case "Low":
-        return const Color(0xFF64FFDA); // Light teal/green for Low
+        return Colors.greenAccent;
       case "Medium":
         return Colors.orangeAccent;
       case "High":
@@ -89,12 +87,26 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
       builder: (_) => AlertDialog(
         backgroundColor: const Color(0xFF0D0D0D),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        title: const Text("Skip to Home?", style: TextStyle(color: Colors.white)),
-        content: const Text("Are you sure you want to go to Home Page?", style: TextStyle(color: Colors.white70)),
+        title: const Text(
+          "Skip to Home?",
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          "Are you sure you want to go to Home Page?",
+          style: TextStyle(color: Colors.white70),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("No", style: TextStyle(color: Colors.white54))),
           TextButton(
-            onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomePage())),
+            onPressed: () => Navigator.pop(context),
+            child: const Text("No", style: TextStyle(color: Colors.white54)),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const HomePage()),
+              );
+            },
             child: const Text("Yes", style: TextStyle(color: greenMain)),
           ),
         ],
@@ -106,100 +118,197 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
+
+      // 🔹 AppBar
       appBar: AppBar(
         backgroundColor: Colors.black,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          icon: const Icon(
+            Icons.arrow_back, // pointed arrow
+            color: Colors.white,
+            size: 22,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text("Recommendations", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Recommendations",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         actions: [
-          TextButton(onPressed: _showSkipDialog, child: const Text("Skip", style: TextStyle(color: greenMain, fontWeight: FontWeight.bold))),
+          TextButton(
+            onPressed: _showSkipDialog,
+            child: const Text(
+              "Skip",
+              style: TextStyle(
+                color: greenMain,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
         ],
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: stocks.length,
-        itemBuilder: (context, index) {
-          final stock = stocks[index];
-          return Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFF0D0D0D),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: purpleAccent.withOpacity(0.4), width: 1),
-            ),
-            child: Row(
-              children: [
-                // Leading Icon Container
-                Container(
-                  height: 50, width: 50,
-                  decoration: BoxDecoration(color: const Color(0xFF1A1A2E), borderRadius: BorderRadius.circular(12)),
-                  child: const Icon(Icons.trending_up, color: purpleAccent, size: 28),
-                ),
-                const SizedBox(width: 12),
-                // Text Content
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(stock["title"], style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 4),
-                      Text(stock["subtitle"], style: const TextStyle(color: Colors.white54, fontSize: 12)),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          _buildTag(stock["risk"], _riskColor(stock["risk"])),
-                          const SizedBox(width: 8),
-                          _buildTag(stock["shariah"] ? "Shariah" : "Non-Shariah", stock["shariah"] ? greenMain : Colors.redAccent),
-                        ],
-                      )
-                    ],
+
+      // 🔹 Body
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: ListView.builder(
+          physics: const BouncingScrollPhysics(),
+          itemCount: stocks.length,
+          itemBuilder: (context, index) {
+            final stock = stocks[index];
+
+            return GestureDetector(
+              onTap: () {
+                _playSound();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        FundViewPage(fundName: stock["title"]),
                   ),
-                ),
-                // Trailing Percentage and Action
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(color: const Color(0xFF1A1A2E), borderRadius: BorderRadius.circular(10)),
-                      child: Text(stock["percentChange"], style: const TextStyle(color: purpleAccent, fontWeight: FontWeight.bold)),
-                    ),
-                    const SizedBox(height: 12),
-                    GestureDetector(
-                      onTap: () {
-                        _playSound();
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => FundViewPage(fundName: stock["title"])));
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(color: purpleAccent, borderRadius: BorderRadius.circular(10)),
-                        child: const Icon(Icons.arrow_forward, color: Colors.white, size: 20),
-                      ),
+                );
+              },
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0x1F1A0F2F),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: purpleAccent.withOpacity(0.7),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.4),
+                      blurRadius: 5,
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
-              ],
-            ),
-          );
-        },
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Icon
+                    Container(
+                      width: 45,
+                      height: 45,
+                      decoration: BoxDecoration(
+                        color: purpleAccent.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.trending_up,
+                        color: purpleAccent,
+                        size: 26,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+
+                    // Text
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            stock["title"],
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            stock["subtitle"],
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              _tag(stock["risk"],
+                                  _riskColor(stock["risk"])),
+                              const SizedBox(width: 6),
+                              _tag(
+                                stock["shariah"]
+                                    ? "Shariah"
+                                    : "Non-Shariah",
+                                stock["shariah"]
+                                    ? greenMain
+                                    : Colors.redAccent,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Right side
+                    Column(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: purpleAccent.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            stock["percentChange"],
+                            style: const TextStyle(
+                              color: purpleAccent,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: purpleAccent,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_forward,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildTag(String text, Color color) {
+  Widget _tag(String text, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
         text,
-        style: const TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+          color: Colors.black,
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }

@@ -97,18 +97,34 @@ class _RecommendationPageState extends State<RecommendationPage> {
       body: Column(
         children: [
           const SizedBox(height: 24),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    _playSound();
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const HomePage()),
+                    );
+                  },
+                  child: const Icon(
+                    Icons.arrow_back,
+                    color: Colors.white,
+                    size: 26,
+                  ),
                 ),
-              ),
+                const SizedBox(width: 12),
+                const Text(
+                  "Recommendations for you",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 12),
@@ -120,7 +136,6 @@ class _RecommendationPageState extends State<RecommendationPage> {
                 itemCount: stocks.length,
                 itemBuilder: (context, index) {
                   final stock = stocks[index];
-
                   return GestureDetector(
                     onTap: () {
                       _playSound();
@@ -187,80 +202,58 @@ class _RecommendationPageState extends State<RecommendationPage> {
                                     fontSize: 12,
                                   ),
                                 ),
-                                const SizedBox(height: 4),
+                                const SizedBox(height: 6),
                                 Row(
                                   children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: _riskColor(stock["risk"]),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Text(
-                                        stock["risk"],
-                                        style: const TextStyle(
-                                          color: Colors.black,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
+                                    _tag(stock["risk"],
+                                        _riskColor(stock["risk"])),
                                     const SizedBox(width: 6),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: stock["shariah"]
-                                            ? greenMain
-                                            : Colors.redAccent,
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Text(
-                                        stock["shariah"]
-                                            ? "Shariah"
-                                            : "Non-Shariah",
-                                        style: const TextStyle(
-                                          color: Colors.black,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
+                                    _tag(
+                                      stock["shariah"]
+                                          ? "Shariah"
+                                          : "Non-Shariah",
+                                      stock["shariah"]
+                                          ? greenMain
+                                          : Colors.redAccent,
                                     ),
                                   ],
-                                )
+                                ),
                               ],
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 5),
-                            decoration: BoxDecoration(
-                              color: purpleAccent.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              stock["percentChange"],
-                              style: const TextStyle(
-                                color: purpleAccent,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
+                          Column(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: purpleAccent.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  stock["percentChange"],
+                                  style: const TextStyle(
+                                    color: purpleAccent,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: purpleAccent,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: const Icon(
-                              Icons.arrow_forward,
-                              color: Colors.white,
-                              size: 18,
-                            ),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: purpleAccent,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Icon(
+                                  Icons.arrow_forward,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -272,13 +265,32 @@ class _RecommendationPageState extends State<RecommendationPage> {
           ),
         ],
       ),
-      bottomNavigationBar: _bottomNavBar(context, 1),
+      bottomNavigationBar: _bottomNavBar(context, 1, _playSound),
+    );
+  }
+
+  Widget _tag(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.black,
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 }
 
-// ---------------- Bottom Navigation ----------------
-Widget _bottomNavBar(BuildContext context, int currentIndex) {
+// Bottom Navigation Bar with Sound
+Widget _bottomNavBar(
+    BuildContext context, int currentIndex, VoidCallback playSound) {
   return BottomNavigationBar(
     backgroundColor: Colors.black,
     selectedItemColor: greenMain,
@@ -286,30 +298,28 @@ Widget _bottomNavBar(BuildContext context, int currentIndex) {
     currentIndex: currentIndex,
     type: BottomNavigationBarType.fixed,
     onTap: (index) {
+      playSound(); // 🔊 play sound on every tab tap
+      if (index == currentIndex) return; // do nothing if same tab
       switch (index) {
         case 0:
           Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const HomePage()),
-          );
+              context, MaterialPageRoute(builder: (_) => const HomePage()));
           break;
         case 1:
           Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const RecommendationPage()),
-          );
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const RecommendationPage()));
           break;
         case 2:
           Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const CustomerSupportPage()),
-          );
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const CustomerSupportPage()));
           break;
         case 3:
           Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const ProfilePage()),
-          );
+              context, MaterialPageRoute(builder: (_) => const ProfilePage()));
           break;
       }
     },

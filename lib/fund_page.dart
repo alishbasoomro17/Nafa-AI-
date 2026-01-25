@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'home_page.dart';
 
 // ---------------- THEME ----------------
@@ -9,7 +10,18 @@ const Color _kDarkBackground = Colors.black;
 const Color _kCardBackground = Color(0xFF1A1A1A);
 const Color _kDarkerBackground = Color(0xFF0F0F0F);
 
-// ---------------- FUND VIEW PAGE (Unchanged) ----------------
+// ---------------- AUDIO PLAYER ----------------
+final AudioPlayer _audioPlayer = AudioPlayer();
+
+void _playClickSound() async {
+  try {
+    await _audioPlayer.play(AssetSource('success.mp3'));
+  } catch (e) {
+    print("Error playing sound: $e");
+  }
+}
+
+// ---------------- FUND VIEW PAGE ----------------
 class FundViewPage extends StatelessWidget {
   final String fundName;
   const FundViewPage({super.key, required this.fundName});
@@ -21,18 +33,16 @@ class FundViewPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: _kDarkBackground,
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white), // Ensures arrow is white
         title: Text(
           fundName,
           style: const TextStyle(
               color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
         actions: [
           TextButton(
             onPressed: () {
+              _playClickSound(); // sound added
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (_) => const HomePage()),
@@ -122,6 +132,7 @@ class FundViewPage extends StatelessWidget {
           label: "Performance",
           color: _kPrimaryColor,
           onTap: () {
+            _playClickSound(); // sound added
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const PerformanceGraph()),
@@ -132,7 +143,10 @@ class FundViewPage extends StatelessWidget {
           icon: Icons.access_time_rounded,
           label: "Time to Invest",
           color: _kAccentSuccess,
-          onTap: () => _timeDialog(context),
+          onTap: () {
+            _playClickSound(); // sound added
+            _timeDialog(context);
+          },
         ),
       ],
     );
@@ -239,7 +253,9 @@ class FundViewPage extends StatelessWidget {
           shape:
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
-        onPressed: () {},
+        onPressed: () {
+          _playClickSound(); // sound added
+        },
       ),
     );
   }
@@ -260,7 +276,7 @@ class FundViewPage extends StatelessWidget {
   }
 }
 
-// ---------------- INSIGHT CARD (Unchanged) ----------------
+// ---------------- INSIGHT CARD ----------------
 class InsightCard extends StatelessWidget {
   final String title;
   final String value;
@@ -298,7 +314,7 @@ class InsightCard extends StatelessWidget {
   }
 }
 
-// ---------------- PERFORMANCE GRAPH (UPDATED UI) ----------------
+// ---------------- PERFORMANCE GRAPH ----------------
 class PerformanceGraph extends StatefulWidget {
   const PerformanceGraph({super.key});
 
@@ -308,10 +324,10 @@ class PerformanceGraph extends StatefulWidget {
 
 class _PerformanceGraphState extends State<PerformanceGraph>
     with SingleTickerProviderStateMixin {
-
-  // Controllers for input boxes
-  final TextEditingController _amountController = TextEditingController(text: "10000");
-  final TextEditingController _monthsController = TextEditingController(text: "12");
+  final TextEditingController _amountController =
+  TextEditingController(text: "10000");
+  final TextEditingController _monthsController =
+  TextEditingController(text: "12");
 
   double amount = 10000;
   int months = 12;
@@ -343,7 +359,7 @@ class _PerformanceGraphState extends State<PerformanceGraph>
       amount = double.tryParse(_amountController.text) ?? 0;
       months = int.tryParse(_monthsController.text) ?? 1;
       if (months < 1) months = 1;
-      if (months > 60) months = 60; // Limit for UI clarity
+      if (months > 60) months = 60;
     });
     _controller.forward(from: 0);
   }
@@ -355,8 +371,10 @@ class _PerformanceGraphState extends State<PerformanceGraph>
       appBar: AppBar(
         backgroundColor: _kDarkBackground,
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
         title: const Text("Performance Projection",
-            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+            style: TextStyle(
+                color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -365,7 +383,10 @@ class _PerformanceGraphState extends State<PerformanceGraph>
           children: [
             const Text(
               "Estimate your returns",
-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             const Text(
@@ -373,31 +394,24 @@ class _PerformanceGraphState extends State<PerformanceGraph>
               style: TextStyle(color: Colors.white54, fontSize: 13),
             ),
             const SizedBox(height: 24),
-
-            // Input Section
             Row(
               children: [
                 Expanded(
                   child: _inputField(
-                    label: "Investment (PKR)",
-                    controller: _amountController,
-                    icon: Icons.account_balance_wallet_outlined,
-                  ),
+                      label: "Investment (PKR)",
+                      controller: _amountController,
+                      icon: Icons.account_balance_wallet_outlined),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: _inputField(
-                    label: "Months",
-                    controller: _monthsController,
-                    icon: Icons.calendar_month_outlined,
-                  ),
+                      label: "Months",
+                      controller: _monthsController,
+                      icon: Icons.calendar_month_outlined),
                 ),
               ],
             ),
-
             const SizedBox(height: 32),
-
-            // Graph Visualization Card
             Container(
               height: 400,
               padding: const EdgeInsets.fromLTRB(10, 24, 20, 10),
@@ -414,10 +428,19 @@ class _PerformanceGraphState extends State<PerformanceGraph>
                       const Padding(
                         padding: EdgeInsets.only(left: 10),
                         child: Text("GROWTH CHART",
-                            style: TextStyle(color: _kAccentSuccess, fontSize: 10, letterSpacing: 1.2, fontWeight: FontWeight.bold)),
+                            style: TextStyle(
+                                color: _kAccentSuccess,
+                                fontSize: 10,
+                                letterSpacing: 1.2,
+                                fontWeight: FontWeight.bold)),
                       ),
-                      Text("Total: PKR ${monthlyData.last.toStringAsFixed(0)}",
-                          style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text(
+                        "Total: PKR ${monthlyData.last.toStringAsFixed(0)}",
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -442,28 +465,35 @@ class _PerformanceGraphState extends State<PerformanceGraph>
     );
   }
 
-  Widget _inputField({
-    required String label,
-    required TextEditingController controller,
-    required IconData icon
-  }) {
+  Widget _inputField(
+      {required String label,
+        required TextEditingController controller,
+        required IconData icon}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500)),
+        Text(label,
+            style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+                fontWeight: FontWeight.w500)),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
           keyboardType: TextInputType.number,
           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           cursorColor: _kAccentSuccess,
-          onChanged: (val) => _updateGraph(),
+          onChanged: (val) {
+            _updateGraph();
+            _playClickSound(); // sound added
+          },
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           decoration: InputDecoration(
             prefixIcon: Icon(icon, color: _kPrimaryColor, size: 20),
             filled: true,
             fillColor: _kCardBackground,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Colors.white10),
@@ -479,15 +509,12 @@ class _PerformanceGraphState extends State<PerformanceGraph>
   }
 }
 
-// ---------------- CUSTOM PAINTER (Refined for UI) ----------------
+// ---------------- CUSTOM PAINTER ----------------
 class EnhancedLineChartPainter extends CustomPainter {
   final List<double> data;
   final double animationValue;
 
-  EnhancedLineChartPainter({
-    required this.data,
-    required this.animationValue,
-  });
+  EnhancedLineChartPainter({required this.data, required this.animationValue});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -502,7 +529,6 @@ class EnhancedLineChartPainter extends CustomPainter {
     final minY = data.reduce((a, b) => a < b ? a : b);
     final range = (maxY - minY).abs() < 1 ? 1 : maxY - minY;
 
-    // Grid
     final gridPaint = Paint()
       ..color = Colors.white.withOpacity(0.05)
       ..strokeWidth = 1;
@@ -514,15 +540,19 @@ class EnhancedLineChartPainter extends CustomPainter {
       final value = maxY - (range * i / 4);
       final tp = TextPainter(
         text: TextSpan(
-          text: i == 0 ? "MAX" : (value > 1000 ? "${(value/1000).toStringAsFixed(1)}k" : value.toInt().toString()),
-          style: const TextStyle(color: Colors.white30, fontSize: 9, fontWeight: FontWeight.bold),
+          text: i == 0
+              ? "MAX"
+              : (value > 1000
+              ? "${(value / 1000).toStringAsFixed(1)}k"
+              : value.toInt().toString()),
+          style:
+          const TextStyle(color: Colors.white30, fontSize: 9, fontWeight: FontWeight.bold),
         ),
         textDirection: TextDirection.ltr,
       )..layout();
       tp.paint(canvas, Offset(5, y - 6));
     }
 
-    // Points calculation
     final visibleCount = (data.length * animationValue).clamp(1, data.length).toInt();
     final points = <Offset>[];
     for (int i = 0; i < visibleCount; i++) {
@@ -541,7 +571,6 @@ class EnhancedLineChartPainter extends CustomPainter {
         path.cubicTo(cx, prev.dy, cx, curr.dy, curr.dx, curr.dy);
       }
 
-      // Area Fill
       final fillPath = Path.from(path)
         ..lineTo(points.last.dx, topPadding + chartHeight)
         ..lineTo(points.first.dx, topPadding + chartHeight)
@@ -554,7 +583,6 @@ class EnhancedLineChartPainter extends CustomPainter {
           colors: [_kAccentSuccess.withOpacity(0.2), Colors.transparent],
         ).createShader(Rect.fromLTWH(0, 0, size.width, size.height)));
 
-      // Main Line
       canvas.drawPath(path, Paint()
         ..shader = const LinearGradient(colors: [_kPrimaryColor, _kAccentSuccess])
             .createShader(Rect.fromLTWH(0, 0, size.width, size.height))
@@ -562,23 +590,25 @@ class EnhancedLineChartPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round);
 
-      // End point glow
-      if(animationValue > 0.9) {
+      if (animationValue > 0.9) {
         canvas.drawCircle(points.last, 6, Paint()..color = _kAccentSuccess.withOpacity(0.3));
         canvas.drawCircle(points.last, 3, Paint()..color = _kAccentSuccess);
       }
     }
 
-    // X labels
     if (data.length > 1) {
       final tpStart = TextPainter(
-        text: const TextSpan(text: "Month 1", style: TextStyle(color: Colors.white38, fontSize: 10)),
+        text: const TextSpan(
+            text: "Month 1",
+            style: TextStyle(color: Colors.white38, fontSize: 10)),
         textDirection: TextDirection.ltr,
       )..layout();
       tpStart.paint(canvas, Offset(leftPadding, topPadding + chartHeight + 10));
 
       final tpEnd = TextPainter(
-        text: TextSpan(text: "Month ${data.length}", style: const TextStyle(color: Colors.white38, fontSize: 10)),
+        text: TextSpan(
+            text: "Month ${data.length}",
+            style: const TextStyle(color: Colors.white38, fontSize: 10)),
         textDirection: TextDirection.ltr,
       )..layout();
       tpEnd.paint(canvas, Offset(size.width - tpEnd.width, topPadding + chartHeight + 10));

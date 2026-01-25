@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:translator/translator.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 // Brand Colors
 const Color greenMain = Color(0xFFAAF308);
 const Color purpleAccent = Color(0xFF6E4BD8);
 const Color darkBg = Color(0xFF1B1B2B);
-const Color surfaceDark = Color(0xFF25253D);
+const Color surfaceDark = Color.fromRGBO(37, 37, 61, 1);
 
 void main() {
   runApp(const MaterialApp(
@@ -23,6 +24,7 @@ class GuidelinesPage extends StatefulWidget {
 
 class _GuidelinesPageState extends State<GuidelinesPage> {
   List<bool> unlockedLessons = [true, false, false, false, false, false];
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   final List<Map<String, dynamic>> lessons = [
     {
@@ -30,117 +32,229 @@ class _GuidelinesPageState extends State<GuidelinesPage> {
       "subtitle": "Understanding Equity",
       "icon": Icons.trending_up,
       "content": """
-The stock market is essentially a marketplace where professional and individual investors come together to buy and sell shares of public companies. 
+The stock market is a marketplace where investors trade ownership of companies through shares. It allows you to grow wealth over time, provided you understand the fundamentals.
 
 1. What is a Share?
-When you buy a share, you are purchasing a piece of the company’s capital. If a company has 1,000 shares and you own 10, you own 1% of that company.
+A share represents a small ownership of a company. Owning shares gives you a claim on profits and dividends. Understanding the difference between common and preferred shares is essential.
 
-2. Why do Prices Change?
-Stock prices change based on supply and demand. If a company reports high profits, more people want to buy it (demand increases), and the price goes up. If the company loses money, people sell (supply increases), and the price goes down.
+2. Why Prices Fluctuate
+Prices change due to supply and demand, corporate performance, economic indicators, and investor sentiment. Positive news increases demand, raising prices; negative news increases supply, lowering prices.
 
-3. The Power of Compounding
-Albert Einstein called compounding the "eighth wonder of the world." If you reinvest your gains, your money starts making money on its own. Over 10-20 years, this can turn small savings into a fortune.
+3. Market Participants
+- Retail Investors: Individuals trading for personal gain.
+- Institutional Investors: Banks, funds, and organizations managing large portfolios.
+- Market Makers: Ensure liquidity by buying and selling continuously.
 
-4. Market Cycles
-Markets don't go up in a straight line. They move in "Bull" (rising) and "Bear" (falling) phases. The key to wealth is staying invested during the Bear phases so you can profit during the Bull phases.
-      """
+4. Stock Exchanges
+Stocks trade on exchanges such as NYSE, NASDAQ, and LSE. These provide a regulated environment with transparency and rules.
+
+5. Power of Compounding
+Reinvesting profits and dividends can grow your money exponentially over time. A small investment can grow into substantial wealth over decades.
+
+6. Market Cycles
+Markets move in Bull (rising) and Bear (falling) cycles. Staying invested during downturns can maximize long-term gains.
+
+7. Investor Psychology
+Fear and greed drive many market decisions. Emotional discipline is as important as knowledge.
+
+8. Investment Strategies
+- Diversification: Spread across sectors and asset classes.
+- Long-term Focus: Avoid panic selling during dips.
+- Education: Keep learning via books, articles, and reports.
+
+9. Example Scenario
+Investing \$1,000 at \$50/share, if price rises to \$75, grows to \$1,500. Reinvested dividends increase growth further.
+
+10. Further Reading
+- "The Intelligent Investor" by Benjamin Graham
+- Investopedia: Stock Market Basics
+
+The stock market is a combination of knowledge, strategy, and patience. Understanding fundamentals, cycles, and investor psychology helps you manage risks and make informed decisions.
+"""
     },
     {
       "title": "Mutual Funds",
       "subtitle": "Expert Managed Wealth",
       "icon": Icons.account_balance_wallet,
       "content": """
-A Mutual Fund is a pool of money managed by a professional Fund Manager. They take money from thousands of investors and invest it in a variety of stocks or bonds.
+Mutual Funds pool money from multiple investors to invest in a diversified portfolio of stocks, bonds, or other assets, managed by professional fund managers.
 
-Benefits of Mutual Funds:
-- Professional Management: You don't need to be an expert; the manager does the research for you.
-- Diversification: Even with \$10, you can own a tiny piece of 50 different companies, reducing your risk.
-- Liquidity: You can usually withdraw your money anytime you need it.
+1. Benefits of Mutual Funds
+- Professional Management: Experts make investment decisions for you.
+- Diversification: Spreads risk across multiple assets.
+- Liquidity: Easy to redeem your units.
+- Affordability: Start investing with small amounts.
 
-Types of Funds:
-- Equity Funds: Invest in stocks (Higher risk, higher reward).
-- Debt Funds: Invest in government bonds (Lower risk, steady income).
-- Hybrid Funds: A mix of both for balanced growth.
+2. Types of Funds
+- Equity Funds: Primarily stocks for growth.
+- Debt Funds: Bonds and fixed income for stability.
+- Hybrid Funds: Mix of equity and debt for balanced risk.
+- Index Funds: Track market indices with low fees.
+- Sector Funds: Focus on specific industries.
 
-For beginners, "Index Funds" are often recommended because they simply track the top companies (like the S&P 500) and have very low fees.
-      """
+3. How Mutual Funds Work
+Investors buy units in the fund, and fund managers allocate money based on strategy. The NAV (Net Asset Value) reflects fund performance.
+
+4. Risks
+- Market Risk: Value fluctuates with markets.
+- Management Risk: Dependence on fund manager’s decisions.
+- Inflation Risk: Returns may not always beat inflation.
+
+5. Choosing a Fund
+- Assess risk tolerance.
+- Examine historical performance.
+- Review fees and expenses.
+- Align with goals: wealth growth, retirement, or income.
+
+6. Example
+Investing \$100 monthly in an equity mutual fund at 12% annual returns could grow to over \$22,000 in 10 years.
+
+7. Tips
+- Start early to leverage compounding.
+- Use systematic investment plans (SIPs) regularly.
+- Diversify across fund types.
+
+Mutual funds are an excellent choice for beginners and experienced investors who want expert management and diversified exposure without monitoring individual stocks.
+"""
     },
     {
       "title": "Risk Management",
       "subtitle": "The Art of Not Losing",
       "icon": Icons.shield_outlined,
       "content": """
-Successful investing is not about how much you make, but how much you keep. Risk management is the foundation of professional trading.
+Risk Management is crucial in investing. Success is not about making the most profit, but protecting capital and minimizing losses.
 
-1. The 1% Rule
-Never risk more than 1% of your total account balance on a single trade. If you have \$1,000, you should only risk losing \$10. This ensures that even a string of losses won't wipe you out.
+1. Core Principles
+- The 1% Rule: Never risk more than 1% of your portfolio on a single trade.
+- Stop-Loss Orders: Predefined exit points prevent catastrophic losses.
+- Diversification: Spread investments to reduce exposure.
+- Emotional Discipline: Avoid impulsive decisions driven by fear or greed.
 
-2. Stop-Loss Orders
-A stop-loss is an automatic order to sell a stock when it reaches a certain price. It acts as an "emergency brake" to prevent small losses from becoming catastrophic disasters.
+2. Types of Risks
+- Market Risk: Changes in asset prices.
+- Credit Risk: Default of bonds or loans.
+- Liquidity Risk: Difficulty converting investments to cash.
+- Inflation Risk: Returns might not beat inflation.
 
-3. Diversification
-"Don't put all your eggs in one basket." By spreading your money across different sectors (Tech, Healthcare, Energy), you protect yourself if one industry performs poorly.
+3. Tools
+- Value at Risk (VaR): Estimate potential losses.
+- Beta: Measures volatility relative to market.
+- Sharpe Ratio: Assesses risk-adjusted returns.
 
-4. Emotional Discipline
-The market is driven by Fear and Greed. Risk management helps you stay logical when everyone else is panicking.
-      """
+4. Strategies
+- Maintain emergency funds before investing.
+- Regularly rebalance portfolio.
+- Avoid over-leveraging.
+- Continuously educate yourself about new instruments.
+
+5. Examples
+Investing \$10,000 in multiple assets with proper stop-losses may limit potential loss to \$500 while allowing growth opportunities.
+
+Risk management ensures sustainability in investing and protects your portfolio against unpredictable market changes. Even small disciplined steps can prevent catastrophic losses over time.
+"""
     },
     {
       "title": "Technical Analysis",
       "subtitle": "Reading Market Psychology",
       "icon": Icons.bar_chart_rounded,
       "content": """
-Technical Analysis (TA) is the study of historical price action to predict future movements. It is based on the idea that "History tends to repeat itself."
+Technical Analysis (TA) studies past price and volume patterns to forecast future market movements. It is widely used by traders and investors.
 
-Key Concepts:
-- Support: A price level where a falling stock tends to stop and bounce back up. Think of it as a 'floor.'
-- Resistance: A price level where a rising stock tends to hit a ceiling and fall back down.
-- Trends: The market moves in trends (Uptrend, Downtrend, or Sideways). The famous saying is: "The trend is your friend."
+1. Key Concepts
+- Support: Price level where a stock tends to stop falling.
+- Resistance: Price level where it tends to stop rising.
+- Trendlines: Lines connecting highs or lows to determine trend direction.
+- Indicators: Tools like RSI, MACD, Bollinger Bands measure momentum and volatility.
 
-Common Indicators:
-- Moving Averages: Smoothens out price data to see the average direction.
-- RSI (Relative Strength Index): Tells you if a stock is 'Overbought' (too expensive) or 'Oversold' (too cheap).
+2. Chart Patterns
+- Head & Shoulders: Predicts reversal.
+- Double Top/Bottom: Signals trend changes.
+- Triangles & Flags: Continuation patterns.
 
-TA isn't a crystal ball, but it gives you a statistical edge to make better entries and exits.
-      """
+3. Combining TA with Fundamentals
+- Fundamental analysis provides company health, earnings, and sector insight.
+- TA helps with timing buy/sell decisions.
+
+4. Common Mistakes
+- Ignoring market sentiment.
+- Over-relying on a single indicator.
+- Trading without a plan.
+
+5. Tips
+- Start simple with 1–2 indicators.
+- Test strategies on paper first.
+- Prioritize risk management.
+
+6. Example
+A stock has support at \$50 and resistance at \$65. Buying near support and selling near resistance can optimize returns.
+
+Technical Analysis helps traders make informed short-term decisions while complementing long-term fundamental strategies.
+"""
     },
     {
       "title": "Dividend Investing",
       "subtitle": "Passive Income Strategy",
       "icon": Icons.monetization_on_outlined,
       "content": """
-Dividend investing is the strategy of buying stocks that pay out a portion of their earnings to shareholders regularly.
+Dividend Investing focuses on buying stocks that pay regular dividends, generating passive income while building long-term wealth.
 
-Why Dividends?
-- Passive Income: It’s like receiving a "rent" check from the companies you own.
-- Stability: Companies that pay dividends are usually mature, profitable, and stable.
-- Reinvestment: You can use dividends to buy more shares (DRIP), which accelerates your compounding growth.
+1. Why Dividends Matter
+- Provides consistent cash flow.
+- Adds stability during volatile markets.
+- Can be reinvested for compounding.
 
-Yield vs. Growth:
-Some companies pay a high "Dividend Yield" (e.g., 5%), but their stock price doesn't grow much. Others grow fast but pay smaller dividends. A healthy portfolio usually has a mix of both. 
+2. Selecting Dividend Stocks
+- Companies with a consistent dividend history.
+- Reasonable payout ratio and growth rate.
+- Diversify across sectors.
 
-Imagine owning a share of a beverage company and getting paid every time someone buys a soda. That is the power of dividends.
-      """
+3. Strategies
+- High Yield: Focus on companies with high dividend payouts.
+- Dividend Growth: Companies increasing dividends consistently.
+- Reinvestment: Reinvest dividends to accelerate wealth.
+
+4. Risks
+- Over-reliance on dividends without growth potential.
+- Dividend cuts in economic downturns.
+
+5. Example
+Investing \$10,000 in dividend-paying stocks at 4% annual yield generates \$400 per year. Reinvesting accelerates growth over time.
+
+Dividend investing is ideal for those seeking steady income alongside long-term capital growth.
+"""
     },
     {
       "title": "Crypto Assets",
       "subtitle": "Blockchain Technology",
       "icon": Icons.currency_bitcoin_rounded,
       "content": """
-Cryptocurrency is a digital or virtual currency secured by cryptography, making it nearly impossible to counterfeit.
+Cryptocurrencies are digital assets secured by blockchain technology, providing decentralized and transparent transactions.
 
-1. Bitcoin (Digital Gold)
-Bitcoin was the first cryptocurrency. It is decentralized, meaning no government or bank controls it. Its value comes from its limited supply (only 21 million will ever exist).
+1. Key Cryptocurrencies
+- Bitcoin: First decentralized currency, store of value.
+- Ethereum: Platform for smart contracts and decentralized apps.
 
-2. Ethereum & Smart Contracts
-Ethereum is more than just money; it’s a platform. It allows developers to build "Smart Contracts"—self-executing contracts with the terms written into code.
+2. High Volatility
+Cryptos experience large price swings, requiring mental preparation and risk tolerance.
 
-3. High Volatility
-Crypto is famous for extreme price swings. It can go up 20% in a day and down 30% the next. Because of this, it is considered a "High Risk, High Reward" asset class.
+3. Security
+Store crypto in cold wallets or hardware wallets. Use two-factor authentication.
 
-4. Security
-In crypto, you are your own bank. You must use hardware wallets and secure your "Seed Phrase." If you lose your keys, you lose your money forever.
-      """
+4. Investment Approaches
+- Buy and Hold: Long-term investments in established coins.
+- Trading: Short-term buy/sell based on market trends.
+- Diversification: Spread across multiple coins to reduce risk.
+
+5. Risks
+- Regulatory: Governments may restrict usage.
+- Market: Prices may fall sharply.
+- Security: Vulnerable to hacks if improperly stored.
+
+6. Example
+Investing \$1,000 in Bitcoin in 2015 could grow exponentially by 2021. Timing and security are critical.
+
+Cryptocurrencies offer unique opportunities but require careful research, strategy, and risk management.
+"""
     },
   ];
 
@@ -152,6 +266,14 @@ In crypto, you are your own bank. You must use hardware wallets and secure your 
     }
   }
 
+  Future<void> _playTune() async {
+    try {
+      await _audioPlayer.play(AssetSource('success.mp3'));
+    } catch (e) {
+      print("Error playing tune: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -159,6 +281,10 @@ In crypto, you are your own bank. You must use hardware wallets and secure your 
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: const Text("Learning Path",
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 24)),
       ),
@@ -184,12 +310,16 @@ In crypto, you are your own bank. You must use hardware wallets and secure your 
     return GestureDetector(
       onTap: () {
         if (isUnlocked) {
+          _playTune();
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => ArticleReaderPage(
                 lesson: lesson,
-                onComplete: () => _unlockNext(index),
+                onComplete: () {
+                  _unlockNext(index);
+                  _playTune();
+                },
               ),
             ),
           );
@@ -213,7 +343,8 @@ In crypto, you are your own bank. You must use hardware wallets and secure your 
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  height: 50, width: 50,
+                  height: 50,
+                  width: 50,
                   decoration: BoxDecoration(
                     color: Colors.black26,
                     borderRadius: BorderRadius.circular(12),
@@ -246,6 +377,7 @@ In crypto, you are your own bank. You must use hardware wallets and secure your 
   }
 }
 
+// ================== ARTICLE READER PAGE ==================
 class ArticleReaderPage extends StatefulWidget {
   final Map<String, dynamic> lesson;
   final VoidCallback onComplete;
@@ -263,6 +395,7 @@ class _ArticleReaderPageState extends State<ArticleReaderPage> {
   bool showUrdu = false;
   String translatedText = "";
   bool loading = false;
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   void initState() {
@@ -272,6 +405,14 @@ class _ArticleReaderPageState extends State<ArticleReaderPage> {
         _progress = (_scrollController.offset / _scrollController.position.maxScrollExtent).clamp(0.0, 1.0);
       });
     });
+  }
+
+  Future<void> _playTune() async {
+    try {
+      await _audioPlayer.play(AssetSource('success.mp3'));
+    } catch (e) {
+      print("Error playing tune: $e");
+    }
   }
 
   @override
@@ -295,7 +436,7 @@ class _ArticleReaderPageState extends State<ArticleReaderPage> {
                 backgroundColor: darkBg,
                 elevation: 0,
                 leading: IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
                   onPressed: () => Navigator.pop(context),
                 ),
                 actions: [
@@ -337,7 +478,6 @@ class _ArticleReaderPageState extends State<ArticleReaderPage> {
               )
             ],
           ),
-          // Scroll Progress Bar at the top
           Positioned(
             top: MediaQuery.of(context).padding.top + 56,
             left: 0, right: 0,
@@ -362,10 +502,13 @@ class _ArticleReaderPageState extends State<ArticleReaderPage> {
   Widget _buildCompleteButton() {
     bool canFinish = _progress > 0.9;
     return GestureDetector(
-      onTap: canFinish ? () {
+      onTap: canFinish
+          ? () {
         widget.onComplete();
+        _playTune();
         Navigator.pop(context);
-      } : null,
+      }
+          : null,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         height: 65,
@@ -390,7 +533,10 @@ class _ArticleReaderPageState extends State<ArticleReaderPage> {
       setState(() => loading = true);
       try {
         var trans = await translator.translate(widget.lesson["content"], to: 'ur');
-        setState(() { translatedText = trans.text; showUrdu = true; });
+        setState(() {
+          translatedText = trans.text;
+          showUrdu = true;
+        });
       } catch (e) {
         debugPrint(e.toString());
       } finally {
