@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:op/recommendation_page.dart';
+
 class RecommendationScreen extends StatefulWidget {
   final String riskCategory;
 
@@ -70,50 +72,49 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
         barrierDismissible: false,
         builder: (context) {
           final risk = widget.riskCategory.isNotEmpty
-              ? (widget.riskCategory[0].toUpperCase() + widget.riskCategory.substring(1))
+              ? (widget.riskCategory[0].toUpperCase() +
+                    widget.riskCategory.substring(1))
               : widget.riskCategory;
           return AlertDialog(
-  backgroundColor: Colors.black,
-  shape: RoundedRectangleBorder(
-    borderRadius: BorderRadius.circular(16),
-  ),
-  content: Column(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Text(
-        "Profile Analyzed 📊",
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      const SizedBox(height: 8),
-      Text(
-        "You are a $risk risk-level investor.\n\nLet us pick the stocks that best match your profile.",
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          color: Colors.white.withOpacity(0.85),
-          fontSize: 14,
-        ),
-      ),
-      const SizedBox(height: 20),
-      const CircularProgressIndicator(
-        color: Colors.greenAccent,
-      ),
-      const SizedBox(height: 10),
-      Text(
-        "Finding the best opportunities for you...",
-        style: TextStyle(
-          color: Colors.white.withOpacity(0.6),
-          fontSize: 12,
-        ),
-      ),
-    ],
-  ),
-);
- },
+            backgroundColor: Colors.black,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "Profile Analyzed 📊",
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "You are a $risk risk-level investor.\n\nPciking the recomendations.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.85),
+                    fontSize: 30,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const CircularProgressIndicator(color: Colors.greenAccent),
+                const SizedBox(height: 10),
+                Text(
+                  "Finding the best opportunities for you...",
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.6),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       );
     });
   }
@@ -201,21 +202,38 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                         final stock = recommendations[index];
 
                         // Normalize status and determine shariah compliance.
-                        final status = (stock['Status '] ?? '').toString().toLowerCase();
+                        final status = (stock['Status'] ?? '')
+                            .toString()
+                            .toLowerCase();
                         // Treat entries that explicitly say "not"/"non" + "halal" as non-shariah.
-                        final bool isExplicitNonHalal = (status.contains('not') && status.contains('halal')) || (status.contains('non') && status.contains('halal'));
-                        final bool shariah = !isExplicitNonHalal && status.contains('halal');
+                        final bool isExplicitNonHalal =
+                            (status.contains('not') &&
+                                status.contains('halal')) ||
+                            (status.contains('non') &&
+                                status.contains('halal'));
+                        final bool shariah =
+                            !isExplicitNonHalal && status.contains('halal');
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 10),
                           child: _stockCard(
                             title:
-                                "${stock[' CompanyName'] ?? 'Unknown'} (${stock['Ticker']})",
+                                "${stock['CompanyName'] ?? 'Unknown'} (${stock['Ticker']})",
                             subtitle: stock['Sector'] ?? 'N/A',
                             percentChange:
                                 "${stock['DailyReturn%']?.toStringAsFixed(2) ?? '0'}%",
                             risk: stock['RiskLevel'] ?? 'Moderate',
                             shariah: shariah,
+                            onArrowTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => RecommendationPage(
+                                    // stock: stock,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         );
                       },
@@ -233,6 +251,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     required String percentChange,
     required String risk,
     required bool shariah,
+    VoidCallback? onArrowTap,
   }) {
     const Color stockColor = Color(0xFF6E4BD8);
     final Color bgColor = const Color(0x1F1A0F2F);
@@ -374,16 +393,20 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
           ),
           const SizedBox(width: 8),
           // Apply / Visit Arrow
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: stockColor,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: const Icon(
-              Icons.arrow_forward,
-              color: Colors.white,
-              size: 18,
+          InkWell(
+            onTap: onArrowTap, // 👈 navigation happens here
+            borderRadius: BorderRadius.circular(6),
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: stockColor,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Icon(
+                Icons.arrow_forward,
+                color: Colors.white,
+                size: 18,
+              ),
             ),
           ),
         ],
