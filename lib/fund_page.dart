@@ -8,7 +8,6 @@ const Color _kAccentSuccess = Color(0xFFAAF308);
 const Color _kPrimaryColor = Color(0xFF6E4BD8);
 const Color _kDarkBackground = Colors.black;
 const Color _kCardBackground = Color(0xFF1A1A1A);
-const Color _kDarkerBackground = Color(0xFF0F0F0F);
 
 // ---------------- AUDIO PLAYER ----------------
 final AudioPlayer _audioPlayer = AudioPlayer();
@@ -33,7 +32,7 @@ class FundViewPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: _kDarkBackground,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white), // Ensures arrow is white
+        iconTheme: const IconThemeData(color: Colors.white),
         title: Text(
           fundName,
           style: const TextStyle(
@@ -42,7 +41,7 @@ class FundViewPage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () {
-              _playClickSound(); // sound added
+              _playClickSound();
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (_) => const HomePage()),
@@ -67,6 +66,8 @@ class FundViewPage extends StatelessWidget {
                   _actionRow(context),
                   const SizedBox(height: 20),
                   _quickInsights(),
+                  const SizedBox(height: 12),
+                  _stockInfoRow(), // <-- New boxes added here
                   const SizedBox(height: 20),
                   _riskSection(),
                 ],
@@ -132,7 +133,7 @@ class FundViewPage extends StatelessWidget {
           label: "Performance",
           color: _kPrimaryColor,
           onTap: () {
-            _playClickSound(); // sound added
+            _playClickSound();
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const PerformanceGraph()),
@@ -144,7 +145,7 @@ class FundViewPage extends StatelessWidget {
           label: "Time to Invest",
           color: _kAccentSuccess,
           onTap: () {
-            _playClickSound(); // sound added
+            _playClickSound();
             _timeDialog(context);
           },
         ),
@@ -205,6 +206,29 @@ class FundViewPage extends StatelessWidget {
     );
   }
 
+  // ---------------- NEW STOCK INFO ROW ----------------
+  Widget _stockInfoRow() {
+    return Row(
+      children: [
+        Expanded(
+          child: InsightCard(
+            title: "Share Price",
+            value: "0.00",
+            icon: Icons.attach_money,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: InsightCard(
+            title: "Percentage Change",
+            value: "+0.00%",
+            icon: Icons.percent,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _riskSection() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -254,7 +278,7 @@ class FundViewPage extends StatelessWidget {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
         onPressed: () {
-          _playClickSound(); // sound added
+          _playClickSound();
         },
       ),
     );
@@ -420,30 +444,9 @@ class _PerformanceGraphState extends State<PerformanceGraph>
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: Colors.white.withOpacity(0.05)),
               ),
-              child: Column(
+              child: Row(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Padding(
-                        padding: EdgeInsets.only(left: 10),
-                        child: Text("GROWTH CHART",
-                            style: TextStyle(
-                                color: _kAccentSuccess,
-                                fontSize: 10,
-                                letterSpacing: 1.2,
-                                fontWeight: FontWeight.bold)),
-                      ),
-                      Text(
-                        "Total: PKR ${monthlyData.last.toStringAsFixed(0)}",
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
+                  const SizedBox(width: 20),
                   Expanded(
                     child: AnimatedBuilder(
                       animation: _controller,
@@ -481,11 +484,12 @@ class _PerformanceGraphState extends State<PerformanceGraph>
         TextField(
           controller: controller,
           keyboardType: TextInputType.number,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           cursorColor: _kAccentSuccess,
           onChanged: (val) {
             _updateGraph();
-            _playClickSound(); // sound added
+            _playClickSound();
           },
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           decoration: InputDecoration(
@@ -518,7 +522,7 @@ class EnhancedLineChartPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    const double leftPadding = 50;
+    const double leftPadding = 0;
     const double bottomPadding = 40;
     const double topPadding = 10;
 
@@ -536,21 +540,6 @@ class EnhancedLineChartPainter extends CustomPainter {
     for (int i = 0; i <= 4; i++) {
       final y = topPadding + chartHeight * i / 4;
       canvas.drawLine(Offset(leftPadding, y), Offset(size.width, y), gridPaint);
-
-      final value = maxY - (range * i / 4);
-      final tp = TextPainter(
-        text: TextSpan(
-          text: i == 0
-              ? "MAX"
-              : (value > 1000
-                  ? "${(value / 1000).toStringAsFixed(1)}k"
-                  : value.toInt().toString()),
-          style:
-              const TextStyle(color: Colors.white30, fontSize: 9, fontWeight: FontWeight.bold),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      tp.paint(canvas, Offset(5, y - 6));
     }
 
     final visibleCount = (data.length * animationValue).clamp(1, data.length).toInt();
@@ -594,24 +583,6 @@ class EnhancedLineChartPainter extends CustomPainter {
         canvas.drawCircle(points.last, 6, Paint()..color = _kAccentSuccess.withOpacity(0.3));
         canvas.drawCircle(points.last, 3, Paint()..color = _kAccentSuccess);
       }
-    }
-
-    if (data.length > 1) {
-      final tpStart = TextPainter(
-        text: const TextSpan(
-            text: "Month 1",
-            style: TextStyle(color: Colors.white38, fontSize: 10)),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      tpStart.paint(canvas, Offset(leftPadding, topPadding + chartHeight + 10));
-
-      final tpEnd = TextPainter(
-        text: TextSpan(
-            text: "Month ${data.length}",
-            style: const TextStyle(color: Colors.white38, fontSize: 10)),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      tpEnd.paint(canvas, Offset(size.width - tpEnd.width, topPadding + chartHeight + 10));
     }
   }
 

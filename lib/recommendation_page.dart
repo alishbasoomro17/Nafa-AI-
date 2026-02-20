@@ -5,8 +5,14 @@ import 'home_page.dart';
 import 'profile_page.dart';
 import 'customer_support_page.dart';
 
-const Color purpleAccent = Color(0xFF6E4BD8);
+/// ORIGINAL COLORS FROM FIRST UI
 const Color greenMain = Color(0xFFAAF308);
+const Color primaryColor = Color(0xFF7B61FF);
+const Color cardColor = Color(0xFF171717);
+const Color greenColor = Color(0xFF00C853);
+const Color redColor = Color(0xFFD50000);
+const Color blueColor = Color(0xFF2979FF);
+const Color goldColor = Color(0xFFFFC107);
 
 class RecommendationPage extends StatefulWidget {
   const RecommendationPage({super.key});
@@ -22,7 +28,7 @@ class _RecommendationPageState extends State<RecommendationPage> {
     try {
       await _audioPlayer.play(AssetSource('success.mp3'));
     } catch (e) {
-      debugPrint("Error playing sound: $e");
+      debugPrint("Sound error: $e");
     }
   }
 
@@ -77,220 +83,125 @@ class _RecommendationPageState extends State<RecommendationPage> {
     },
   ];
 
-  Color _riskColor(String risk) {
+  Icon _riskArrow(String risk) {
     switch (risk) {
-      case "Low":
-        return Colors.greenAccent;
-      case "Medium":
-        return Colors.orangeAccent;
       case "High":
-        return Colors.redAccent;
+        return const Icon(Icons.arrow_downward, color: redColor);
+      case "Medium":
+        return const Icon(Icons.arrow_forward, color: blueColor);
+      case "Low":
+        return const Icon(Icons.arrow_upward, color: goldColor);
       default:
-        return Colors.white;
+        return const Icon(Icons.remove);
     }
+  }
+
+  Color _percentColor(String percent) {
+    return percent.contains("-") ? redColor : greenColor;
+  }
+
+  Widget _tag(bool isShariah) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: isShariah ? greenColor.withOpacity(.15) : redColor.withOpacity(.15),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        isShariah ? "Shariah" : "Non-Shariah",
+        style: TextStyle(
+          color: isShariah ? greenColor : redColor,
+          fontSize: 11,
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Column(
-        children: [
-          const SizedBox(height: 24),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    _playSound();
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const HomePage()),
-                    );
-                  },
-                  child: const Icon(
-                    Icons.arrow_back,
-                    color: Colors.white,
-                    size: 26,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Text(
-                  "Recommendations for you",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: ListView.builder(
-                physics: const BouncingScrollPhysics(),
-                itemCount: stocks.length,
-                itemBuilder: (context, index) {
-                  final stock = stocks[index];
-                  return GestureDetector(
-                    onTap: () {
-                      _playSound();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              FundViewPage(fundName: stock["title"]),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0x1F1A0F2F),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: purpleAccent.withOpacity(0.7),
-                          width: 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.4),
-                            blurRadius: 5,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 45,
-                            height: 45,
-                            decoration: BoxDecoration(
-                              color: purpleAccent.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.trending_up,
-                              color: purpleAccent,
-                              size: 26,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  stock["title"],
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  stock["subtitle"],
-                                  style: const TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Row(
-                                  children: [
-                                    _tag(stock["risk"],
-                                        _riskColor(stock["risk"])),
-                                    const SizedBox(width: 6),
-                                    _tag(
-                                      stock["shariah"]
-                                          ? "Shariah"
-                                          : "Non-Shariah",
-                                      stock["shariah"]
-                                          ? greenMain
-                                          : Colors.redAccent,
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Column(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 5),
-                                decoration: BoxDecoration(
-                                  color: purpleAccent.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  stock["percentChange"],
-                                  style: const TextStyle(
-                                    color: purpleAccent,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: purpleAccent,
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: const Icon(
-                                  Icons.arrow_forward,
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            _playSound();
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const HomePage()),
+            );
+          },
+        ),
+        title: const Text(
+          "Personalized Stock Recommendations",
+          style: TextStyle(
+              fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
+        ),
+        // Skip button removed
+      ),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: stocks.length,
+        itemBuilder: (context, index) {
+          final stock = stocks[index];
+          return GestureDetector(
+            onTap: () {
+              _playSound();
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => FundViewPage(fundName: stock["title"])),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.show_chart, color: primaryColor),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(stock["title"],
+                            style: const TextStyle(color: Colors.white)),
+                        Text(stock["subtitle"],
+                            style: const TextStyle(color: Colors.white54)),
+                        const SizedBox(height: 4),
+                        _tag(stock["shariah"]),
+                      ],
                     ),
-                  );
-                },
+                  ),
+                  Column(
+                    children: [
+                      _riskArrow(stock["risk"]),
+                      Text(
+                        stock["percentChange"],
+                        style:
+                            TextStyle(color: _percentColor(stock["percentChange"])),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+          );
+        },
       ),
       bottomNavigationBar: _bottomNavBar(context, 1, _playSound),
-    );
-  }
-
-  Widget _tag(String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: Colors.black,
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
     );
   }
 }
 
 // Bottom Navigation Bar with Sound
-Widget _bottomNavBar(
-    BuildContext context, int currentIndex, VoidCallback playSound) {
+Widget _bottomNavBar(BuildContext context, int currentIndex, VoidCallback playSound) {
   return BottomNavigationBar(
     backgroundColor: Colors.black,
     selectedItemColor: greenMain,
@@ -298,8 +209,8 @@ Widget _bottomNavBar(
     currentIndex: currentIndex,
     type: BottomNavigationBarType.fixed,
     onTap: (index) {
-      playSound(); // 🔊 play sound on every tab tap
-      if (index == currentIndex) return; // do nothing if same tab
+      playSound();
+      if (index == currentIndex) return;
       switch (index) {
         case 0:
           Navigator.pushReplacement(
@@ -307,15 +218,11 @@ Widget _bottomNavBar(
           break;
         case 1:
           Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                  builder: (_) => const RecommendationPage()));
+              context, MaterialPageRoute(builder: (_) => const RecommendationPage()));
           break;
         case 2:
-          Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                  builder: (_) => const CustomerSupportPage()));
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (_) => const CustomerSupportPage()));
           break;
         case 3:
           Navigator.pushReplacement(

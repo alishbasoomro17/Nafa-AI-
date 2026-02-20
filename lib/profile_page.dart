@@ -5,8 +5,9 @@ import 'signup.dart';
 import 'customer_support_page.dart';
 import 'recommendation_page.dart';
 
-const Color purpleAccent = Color(0xFF6E4BD8);
-const Color greenMain = Color(0xFFAAF308);
+const Color purpleColor = Color(0xFF7B61FF); // purple shade
+const Color primaryColor = Color.fromARGB(255, 23, 7, 26); // primary background
+const Color greenMain = Color(0xFFAAF308); // light green for bottom nav & success icons
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -193,7 +194,7 @@ class _ProfilePageState extends State<ProfilePage> {
       children: [
         const CircleAvatar(
           radius: 60,
-          backgroundColor: purpleAccent,
+          backgroundColor: Color(0xFF7B61FF),
           child: Icon(Icons.person, size: 60, color: Colors.white),
         ),
         Positioned(
@@ -202,10 +203,10 @@ class _ProfilePageState extends State<ProfilePage> {
           child: Container(
             padding: const EdgeInsets.all(6),
             decoration: const BoxDecoration(
-              color: purpleAccent,
+              color: primaryColor,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.edit, size: 18, color: Colors.white),
+            child: const Icon(Icons.edit, size: 18, color: Color(0xFF7B61FF)),
           ),
         ),
       ],
@@ -213,69 +214,81 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _editableInfoField({
-    required String label,
-    required TextEditingController controller,
-    required String fieldName,
-  }) {
-    bool editing = false;
+  required String label,
+  required TextEditingController controller,
+  required String fieldName,
+}) {
+  bool editing = false;
 
-    return StatefulBuilder(
-      builder: (context, setStateSB) {
-        return Container(
-          padding: const EdgeInsets.all(16),
-          decoration: _boxDecoration(),
-          child: Row(
-            children: [
-              Expanded(
-                child: editing
-                    ? TextField(
-                        controller: controller,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: InputDecoration(
-                          hintText: label,
-                          hintStyle: const TextStyle(color: Colors.white54),
-                          filled: true,
-                          fillColor: Colors.grey[900],
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: BorderSide.none,
-                          ),
+  return StatefulBuilder(
+    builder: (context, setStateSB) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.grey[900], // dark grey background
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: purpleColor, width: 2), // purple outline
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: editing
+                  ? TextField(
+                      controller: controller,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: label,
+                        hintStyle: const TextStyle(color: Colors.white54),
+                        filled: true,
+                        fillColor: Colors.grey[900],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(color: purpleColor), // purple border
                         ),
-                      )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(label,
-                              style: const TextStyle(
-                                  color: Colors.white70, fontSize: 13)),
-                          const SizedBox(height: 4),
-                          Text(controller.text,
-                              style: const TextStyle(
-                                  color: Colors.white, fontSize: 16)),
-                        ],
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(color: purpleColor),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(color: purpleColor, width: 2),
+                        ),
                       ),
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(label,
+                            style: const TextStyle(
+                                color: Colors.white70, fontSize: 13)),
+                        const SizedBox(height: 4),
+                        Text(controller.text,
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 16)),
+                      ],
+                    ),
+            ),
+            IconButton(
+              icon: Icon(
+                editing ? Icons.check : Icons.edit,
+                color: editing ? greenMain : purpleColor,
               ),
-              IconButton(
-                icon: Icon(
-                  editing ? Icons.check : Icons.edit,
-                  color: editing ? greenMain : purpleAccent,
-                ),
-                onPressed: () {
-                  if (editing) {
-                    _updateField(controller, fieldName);
-                    _showUpdatePrompt("$label updated successfully");
-                  }
-                  setStateSB(() {
-                    editing = !editing;
-                  });
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+              onPressed: () {
+                if (editing) {
+                  _updateField(controller, fieldName);
+                  _showUpdatePrompt("$label updated successfully");
+                }
+                setStateSB(() {
+                  editing = !editing;
+                });
+              },
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
 
   Widget _optionButton(String title, IconData icon, VoidCallback onTap) {
     return GestureDetector(
@@ -288,7 +301,7 @@ class _ProfilePageState extends State<ProfilePage> {
         decoration: _boxDecoration(),
         child: Row(
           children: [
-            Icon(icon, color: purpleAccent),
+            Icon(icon, color: Color(0xFF7B61FF)),
             const SizedBox(width: 12),
             Text(title, style: const TextStyle(color: Colors.white, fontSize: 15)),
           ],
@@ -301,7 +314,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return BoxDecoration(
       color: Colors.grey[900],
       borderRadius: BorderRadius.circular(14),
-      border: Border.all(color: purpleAccent.withOpacity(0.5)),
+      border: Border.all(color: primaryColor.withOpacity(0.5)),
     );
   }
 
@@ -338,7 +351,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 }
 
-/* ================= CHANGE PASSWORD SCREEN ================= */
+/* ================= CHANGE PASSWORD SCREEN ================== */
 class ChangePasswordScreen extends StatefulWidget {
   final VoidCallback onSuccess;
   const ChangePasswordScreen({super.key, required this.onSuccess});
@@ -534,7 +547,7 @@ class NotificationsScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.grey[900],
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: purpleAccent.withOpacity(0.3)),
+        border: Border.all(color: primaryColor.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -576,7 +589,6 @@ class FaqsScreen extends StatelessWidget {
           FaqCard("How do I contact for app realted issues", "You can contact customer support via WhatsApp at 0318-8975730 for any queries or app-related issues."),
           FaqCard("Who can I contact for financial details?", "For any financial-related questions, you can use support feature"),
           FaqCard("What if I forgot my password?", "You can reset your password directly from the signup page."),
-        
         ],
       ),
     );
@@ -605,7 +617,7 @@ class _FaqCardState extends State<FaqCard> {
         decoration: BoxDecoration(
           color: Colors.grey[900],
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: purpleAccent.withOpacity(0.3)),
+          border: Border.all(color: primaryColor.withOpacity(0.3)),
         ),
         child: Column(
           children: [
@@ -617,7 +629,7 @@ class _FaqCardState extends State<FaqCard> {
                           color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
                 Icon(open ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                    color: purpleAccent),
+                    color: primaryColor),
               ],
             ),
             if (open)
@@ -632,12 +644,12 @@ class _FaqCardState extends State<FaqCard> {
     );
   }
 }
+
 /* ================= AUDIO PLAYER ================= */
 final AudioPlayer _audioPlayer = AudioPlayer();
 
 void _playSound() async {
   try {
-    // Play your tune here
     await _audioPlayer.play(AssetSource('tune.mp3'));
   } catch (e) {
     debugPrint("Error playing tune: $e");
@@ -653,7 +665,6 @@ Widget _bottomNavBar(BuildContext context, int currentIndex, VoidCallback playSo
     currentIndex: currentIndex,
     type: BottomNavigationBarType.fixed,
     onTap: (index) {
-      // 🔊 Play the tune for every tab tap
       playSound();
 
       if (index == currentIndex) return;

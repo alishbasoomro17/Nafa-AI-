@@ -30,14 +30,14 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       "type": "content",
       "title": "Shariah & Non-Shariah Options",
       "subtitle":
-          "Choose transparent investment options aligned with your personal values.",
+          "Choose transparent stock investment options aligned with your personal values.",
       "icon": Icons.verified_user_rounded,
     },
     {
       "type": "content",
       "title": "Quiz-Based Risk Profiling",
       "subtitle":
-          "Answer a short quiz to receive AI-powered investment recommendations.",
+          "Complete a short quiz to get personalized AI-powered stock investment recommendations.",
       "icon": Icons.analytics_rounded,
     },
   ];
@@ -161,7 +161,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 40),
           child: Text(
-            "Personalized investment guidance, aligned with Shariah values.",
+            "Get personalized AI-driven stock investment guidance, fully aligned with Shariah principles.",
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,

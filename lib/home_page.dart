@@ -4,7 +4,7 @@ import 'recommendation_page.dart';
 import 'customer_support_page.dart';
 import 'profile_page.dart';
 import 'GuidelinesPage.dart';
-import 'course_page.dart'; // New page import
+import 'course_page.dart'; // Financial Course Page
 
 const Color greenMain = Color(0xFFAAF308);
 const Color purpleAccent = Color(0xFF6E4BD8);
@@ -19,14 +19,20 @@ class HomePage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.black,
         elevation: 0,
-        title: const Text("", style: TextStyle(color: greenMain, fontWeight: FontWeight.bold)),
+        automaticallyImplyLeading: false,
+        title: const Text(
+          "",
+          style: TextStyle(color: greenMain, fontWeight: FontWeight.bold),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications, color: purpleAccent),
             onPressed: () {
               _playClickSound();
-              // Add Notifications page if needed
-              // Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+              );
             },
           ),
         ],
@@ -43,7 +49,7 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 20),
             _actionGrid(context),
             const SizedBox(height: 20),
-            _learningModule(context), // Both Learning Module and Financial Course inside
+            _learningModule(context),
           ],
         ),
       ),
@@ -202,13 +208,12 @@ Widget _actionBox({
   );
 }
 
-/* ---------------- LEARNING MODULE WITH FINANCIAL COURSE ---------------- */
+/* ---------------- LEARNING MODULE ---------------- */
 Widget _learningModule(BuildContext context) {
   return _sectionBox(
     title: "Learning Module",
     child: Column(
       children: [
-        // Learning Module Box
         _moduleBox(
           context,
           icon: Icons.school,
@@ -219,7 +224,6 @@ Widget _learningModule(BuildContext context) {
           },
         ),
         const SizedBox(height: 16),
-        // Financial Beginner Course Box
         _moduleBox(
           context,
           icon: Icons.monetization_on,
@@ -234,7 +238,6 @@ Widget _learningModule(BuildContext context) {
   );
 }
 
-/* ---------------- MODULE BOX (Reusable for Learning / Financial) ---------------- */
 Widget _moduleBox(BuildContext context,
     {required IconData icon, required String title, required VoidCallback onTap}) {
   return GestureDetector(
@@ -313,7 +316,7 @@ void _infoDialog(BuildContext context, String title, String message) {
   );
 }
 
-/* ---------------- BOTTOM NAV ---------------- */
+/* ---------------- BOTTOM NAVIGATION ---------------- */
 Widget _bottomNavBar(BuildContext context, int currentIndex) {
   return BottomNavigationBar(
     backgroundColor: Colors.black,
@@ -323,7 +326,6 @@ Widget _bottomNavBar(BuildContext context, int currentIndex) {
     type: BottomNavigationBarType.fixed,
     onTap: (index) {
       _playClickSound();
-
       if (index == currentIndex) return;
 
       switch (index) {
@@ -348,4 +350,52 @@ Widget _bottomNavBar(BuildContext context, int currentIndex) {
       BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
     ],
   );
+}
+
+/* ---------------- NOTIFICATIONS SCREEN ---------------- */
+class NotificationsScreen extends StatelessWidget {
+  const NotificationsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text("Notifications", style: TextStyle(color: Colors.white)),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _notificationCard("Welcome!", "Thank you for joining Nafa AI!"),
+          const SizedBox(height: 12),
+          _notificationCard("New Feature", "Check out the latest recommendations feature."),
+        ],
+      ),
+    );
+  }
+
+  Widget _notificationCard(String title, String content) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: purpleAccent.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+          const SizedBox(height: 6),
+          Text(content, style: const TextStyle(color: Colors.white70, fontSize: 14)),
+        ],
+      ),
+    );
+  }
 }
