@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:op/recommendations_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:audioplayers/audioplayers.dart'; // Added for sound
+import 'package:audioplayers/audioplayers.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:jwt_decoder/jwt_decoder.dart';
-
-
+import 'After_Quiz_Splash.dart';
 
 class QuizScreen extends StatefulWidget {
   const QuizScreen({super.key});
@@ -17,40 +16,125 @@ class QuizScreen extends StatefulWidget {
 
 class _QuizScreenState extends State<QuizScreen> {
   final List<Map<String, dynamic>> submittedAnswers = [];
+  int currentIndex = 0;
+  String? selectedOption;
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  final List<Map<String, dynamic>> questions = [
+    {
+      "questionId": 1,
+      "questionText": " What is your major investment objective? ",
+      "options": [
+       "Preserve my capital with steady, low-risk returns." ,
+" Achieve moderate growth, accepting short-term declines ",
+"Pursue higher returns even with significant volatility. ",
+      ]
+    },
+    {
+      "questionId": 2,
+      "questionText": " What is your intended investment time frame? ",
+      "options": [
+        "Short-term (under 3 years) for quick growth",
+        "Medium-term (3 to 10 years)",
+        "Long-term (over 10 years) for high returns"
+      ]
+    },
+    {
+      "questionId": 3,
+      "questionText": "How important is access to your invested funds (liquidity)?",
+      "options": [
+        "Very important: I may need to withdraw a significant portion within 1–2 years",
+        "Moderately important: I may need partial access if required, but not urgently",
+        "Low importance: I do not expect to need these funds for several years",
+        "Not a concern: I can remain fully invested for the long term without liquidity needs"
+      ]
+    },
+    {
+      "questionId": 4,
+      "questionText": "What is your primary financial goal in investment?",
+      "options": [
+        "Wealth Preservation ",
+" Building an Emergency Fund ",
+" Saving for a Major Purchase ",
+" Paying Off Debt ",
+"  Education Funding for Children ",
+"  Retirement planning ",
+" Build long term wealth"
+
+      ]
+    },
+    {
+      "questionId": 5,
+      "questionText": "If the stock market declines by 25% in a short period and the value of your investment falls from PKR 10,000 to PKR 7,500, how would you most likely respond? ",
+      "options": [
+         "Would sell all my stocks to avoid further losses, as capital preservation is my priority.",
+         "I would wait for the investment to recover to my original amount and then sell, even if it takes time.",
+         "I would sell stocks that have declined significantly and retain relatively stable holdings.",
+         "I would remain invested, closely monitor the market, and avoid selling, as I believe short-term declines are part of long-term growth.",
+" I would consider investing additional funds to take advantage of lower prices, viewing market downturns as long-term opportunities. "
+      ]
+    },
+    {
+      "questionId": 6,
+      "questionText": "How does your domestic debt compare to your monthly income? ",
+      "options": ["No debt at all ", "Low debt (under half of monthly income) ", "Moderate debt (around half) ", "High debt (more than monthly income)"]
+    },
+    {
+      "questionId": 7,
+      "questionText": "What best describes your investment experience?",
+      "options": ["No prior experience", "Limited experience", "Moderate experience", "Extensive experience"]
+    },
+    {
+      "questionId": 8,
+      "questionText": "How do you typically make investment decisions?",
+      "options": [
+        "Rely on tips or market sentiment",
+        "Basic personal judgment",
+        "Structured analysis",
+        "Data-driven and disciplined strategy"
+      ]
+    },
+    {
+      "questionId": 9,
+      "questionText": "What portion of your assets are you comfortable allocating to stocks?",
+      "options": ["Less than 30%", "30–50%", "50–70%", "More than 70%"]
+    },
+    {
+      "questionId": 10,
+      "questionText": "How do you generally feel during prolonged market volatility?",
+      "options": ["Highly anxious", "Somewhat anxious", "Neutral", "Calm and confident"]
+    },
+  ];
+
   Future<String?> getUserId() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString("token");
-
     if (token == null) return null;
-
     final decoded = JwtDecoder.decode(token);
-
-    // Assuming NestJS stored userId as "sub"
     return decoded["id"]?.toString();
   }
 
   Future<void> submitQuizToBackend() async {
-    print("pressed button");
-    print(submittedAnswers);
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString("token");
-
     final userId = await getUserId();
-    print(userId);
 
-    try
-    {
+    if (userId == null || token == null) return;
+
+    try {
       final response = await http.post(
         Uri.parse("http://127.0.0.1:3000/quiz/submit-answers/$userId"),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",
         },
-        body: jsonEncode(submittedAnswers), // MUST be array
+        body: jsonEncode(submittedAnswers),
       );
 
       print("Status Code: ${response.statusCode}");
       print("Response: ${response.body}");
+
+      if (!mounted) return;
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -74,6 +158,7 @@ class _QuizScreenState extends State<QuizScreen> {
         }
         // store full response body for recommendations use
         await prefs.setString('quiz_result_body', response.body);
+        if (!mounted) return;
 
         Future.delayed(const Duration(seconds: 1), () {
           Navigator.pushReplacement(
@@ -82,246 +167,16 @@ class _QuizScreenState extends State<QuizScreen> {
           );
         });
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed: ${response.body}")),
-        );
+        print("Failed: ${response.body}");
       }
     } catch (e) {
-      print("EXCEPTION: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error sending answers: $e")),
-      );
+      print("Error sending answers: $e");
+      if (!mounted) return;
     }
   }
  
  
- 
-  final List<Map<String, dynamic>> questions =
-  [
-    // {
-    //   "questionId": 1,
-    //   "questionText": "What is my primary investment goal right now?",
-    //   "options": [
-    //     "Capital preservation",
-    //     "Steady income",
-    //     "Moderate growth",
-    //     "High growth",
-    //     "Aggressive speculation"
-    //   ]
-    // },
-    // {
-    //   "questionId": 2,
-    //   "questionText": "What is my time horizon for using the money I plan to invest?",
-    //   "options": [
-    //     "Less than 1 year",
-    //     "1–3 years",
-    //     "4–7 years",
-    //     "8–15 years",
-    //     "More than 15 years"
-    //   ]
-    // },
-    // {
-    //   "questionId": 3,
-    //   "questionText": "How comfortable am I with short-term fluctuations in my portfolio value?",
-    //   "options": [
-    //     "Not comfortable at all",
-    //     "Slightly uncomfortable",
-    //     "Neutral",
-    //     "Comfortable",
-    //     "Very comfortable"
-    //   ]
-    // },
-    // {
-    //   "questionId": 4,
-    //   "questionText": "How would I react if my investments dropped 20% in a few months?",
-    //   "options": [
-    //     "Sell everything to avoid more losses",
-    //     "Sell some to reduce risk",
-    //     "Hold and wait",
-    //     "Buy more at lower price"
-    //   ]
-    // },
-    // {
-    //   "questionId": 5,
-    //   "questionText": "How would I describe my current financial stability?",
-    //   "options": [
-    //     "Unstable with high liabilities",
-    //     "Somewhat stable but stressed",
-    //     "Stable",
-    //     "Very stable with low liabilities",
-    //     "Extremely stable with strong savings"
-    //   ]
-    // },
-    // {
-    //   "questionId": 6,
-    //   "questionText": "Do I have an emergency fund covering at least 3–6 months of expenses?",
-    //   "options": [
-    //     "No",
-    //     "Partially",
-    //     "Yes"
-    //   ]
-    // },
-    // {
-    //   "questionId": 7,
-    //   "questionText": "How much does this investment amount matter to my overall net worth?",
-    //   "options": [
-    //     "Critical portion",
-    //     "Large portion",
-    //     "Moderate portion",
-    //     "Small portion",
-    //     "Very small portion"
-    //   ]
-    // },
-    // {
-    //   "questionId": 8,
-    //   "questionText": "How would I rate my knowledge of stock investing?",
-    //   "options": [
-    //     "None",
-    //     "Basic",
-    //     "Intermediate",
-    //     "Advanced",
-    //     "Expert"
-    //   ]
-    // },
-    // {
-    //   "questionId": 9,
-    //   "questionText": "Which investment products am I comfortable using?",
-    //   "options": [
-    //     "Savings accounts",
-    //     "Mutual funds / ETFs",
-    //     "Individual stocks",
-    //     "Options / Futures",
-    //     "Margin or leveraged products"
-    //   ]
-    // },
-    {
-      "questionId": 10,
-      "questionText": "How many years of experience do I have actively investing?",
-      "options": [
-        "0 years",
-        "Less than 1 year",
-        "1–3 years",
-        "4–7 years",
-        "More than 7 years"
-      ]
-    },
-    {
-      "questionId": 11,
-      "questionText": "How often do I monitor my portfolio?",
-      "options": [
-        "Multiple times a day",
-        "Daily",
-        "Weekly",
-        "Monthly",
-        "Rarely"
-      ]
-    },
-    {
-      "questionId": 12,
-      "questionText": "How do I typically make investment decisions?",
-      "options": [
-        "Following tips or influencers",
-        "Impulsive decisions",
-        "Basic research",
-        "Detailed analysis",
-        "Highly structured research process"
-      ]
-    },
-    {
-      "questionId": 13,
-      "questionText": "How do I feel emotionally when markets drop sharply?",
-      "options": [
-        "Very anxious",
-        "Somewhat anxious",
-        "Neutral",
-        "Calm",
-        "Unbothered"
-      ]
-    },
-    {
-      "questionId": 14,
-      "questionText": "If a single stock in my portfolio drops 50%, what is my likely action?",
-      "options": [
-        "Sell immediately",
-        "Sell part of it",
-        "Hold and wait",
-        "Buy more",
-        "Re-evaluate based on fundamentals"
-      ]
-    },
-    // {
-    //   "questionId": 15,
-    //   "questionText": "How dependent am I on this invested money for short-term needs?",
-    //   "options": [
-    //     "Highly dependent",
-    //     "Somewhat dependent",
-    //     "Not very dependent",
-    //     "Not dependent at all"
-    //   ]
-    // },
-    // {
-    //   "questionId": 16,
-    //   "questionText": "How would I rate my ability to handle financial losses?",
-    //   "options": [
-    //     "Cannot tolerate losses",
-    //     "Very low tolerance",
-    //     "Moderate tolerance",
-    //     "High tolerance",
-    //     "Very high tolerance"
-    //   ]
-    // },
-    // {
-    //   "questionId": 17,
-    //   "questionText": "What percentage of my assets am I comfortable allocating to stocks?",
-    //   "options": [
-    //     "0–20%",
-    //     "21–40%",
-    //     "41–60%",
-    //     "61–80%",
-    //     "81–100%"
-    //   ]
-    // },
-    // {
-    //   "questionId": 18,
-    //   "questionText": "How likely am I to follow friends, social media, or hype when investing?",
-    //   "options": [
-    //     "Very likely",
-    //     "Somewhat likely",
-    //     "Neutral",
-    //     "Unlikely",
-    //     "Never"
-    //   ]
-    // },
-    // {
-    //   "questionId": 19,
-    //   "questionText": "How would I react if markets stayed volatile for a long period?",
-    //   "options": [
-    //     "Panic and exit the market",
-    //     "Gradually reduce exposure",
-    //     "Stay invested with no changes",
-    //     "Increase exposure to capture opportunities"
-    //   ]
-    // },
-    // {
-    //   "questionId": 20,
-    //   "questionText": "What motivates me most to invest in stocks?",
-    //   "options": [
-    //     "Fear of losing money elsewhere",
-    //     "Need income",
-    //     "Desire for long-term growth",
-    //     "Desire to beat the market",
-    //     "Desire for fast high returns"
-    //   ]
-    // }
-  ]
-  ;
 
-  int currentIndex = 0;
-  String? selectedOption;
-
-  final AudioPlayer _audioPlayer = AudioPlayer(); // Audio player instance
-
-  // ----- Play sound on option click -----
   void _playOptionSound() async {
     try {
       await _audioPlayer.play(AssetSource('success.mp3'));
@@ -331,9 +186,39 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    double progress = (currentIndex + 1) / questions.length;
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  Future<void> _onNextPressed() async {
     final currentQuestion = questions[currentIndex];
+
+    submittedAnswers.add({
+      "questionId": currentQuestion["questionId"],
+      "questionText": currentQuestion["questionText"],
+      "quizAnswer": selectedOption,
+    });
+
+    if (currentIndex < questions.length - 1) {
+      setState(() {
+        currentIndex++;
+        selectedOption = null;
+      });
+    } else {
+      // Navigate immediately
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) =>const  AfterQuizSplash()),
+      );
+      // Submit answers in background
+      submitQuizToBackend();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currentQuestion = questions[currentIndex];
+    final double progress = (currentIndex + 1) / questions.length;
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
@@ -343,7 +228,7 @@ class _QuizScreenState extends State<QuizScreen> {
           padding: const EdgeInsets.all(24.0),
           child: Column(
             children: [
-              // 🔹 Progress Bar
+              // Progress Bar
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -359,17 +244,14 @@ class _QuizScreenState extends State<QuizScreen> {
                   const SizedBox(height: 10),
                   Text(
                     "Question ${currentIndex + 1} of ${questions.length}",
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
                   ),
                 ],
               ),
 
               const SizedBox(height: 40),
 
-              // 🔹 Question Content
+              // Question Text
               Expanded(
                 child: Center(
                   child: SingleChildScrollView(
@@ -389,13 +271,14 @@ class _QuizScreenState extends State<QuizScreen> {
                         ),
                         const SizedBox(height: 30),
 
+                        // Options
                         Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: currentQuestion["options"].map<Widget>((option) {
                             final isSelected = selectedOption == option;
                             return GestureDetector(
                               onTap: () {
-                                _playOptionSound(); // Play sound on option click
+                                _playOptionSound();
                                 setState(() {
                                   selectedOption = option;
                                 });
@@ -432,7 +315,7 @@ class _QuizScreenState extends State<QuizScreen> {
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color: isSelected ? Colors.black : Colors.white70,
-                                    fontSize: 16,
+                                    fontSize: 9,
                                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                                   ),
                                 ),
@@ -446,7 +329,7 @@ class _QuizScreenState extends State<QuizScreen> {
                 ),
               ),
 
-              // 🔹 Next / Finish button
+              // Next / Finish Button
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: SizedBox(
@@ -461,27 +344,7 @@ class _QuizScreenState extends State<QuizScreen> {
                       elevation: 8,
                       shadowColor: const Color(0xFFAAF308).withOpacity(0.4),
                     ),
-                    onPressed: selectedOption == null
-                        ? null
-                        : () {
-                      // Save current question answer
-                      submittedAnswers.add({
-                        "questionId": currentQuestion["questionId"],
-                        "questionText": currentQuestion["questionText"],
-                        "quizAnswer": selectedOption,
-                      });
-
-                      if (currentIndex < questions.length - 1) {
-                        setState(() {
-                          currentIndex++;
-                          selectedOption = null;
-                        });
-                      } else {
-                        print("Submitted Answers: $submittedAnswers");
-                        submitQuizToBackend(); // << call API here
-                      }
-                    },
-
+                    onPressed: selectedOption == null ? null : _onNextPressed,
                     child: Text(
                       currentIndex == questions.length - 1 ? "Finish" : "Next",
                       style: const TextStyle(

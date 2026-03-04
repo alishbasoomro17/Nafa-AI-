@@ -1,15 +1,90 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'signup.dart';       
-import 'quiz_screen.dart'; 
 
 
-class OnboardingScreen extends StatelessWidget {
-  const OnboardingScreen({super.key});
+class OnboardingFlow extends StatefulWidget {
+  const OnboardingFlow({super.key});
+
+  @override
+  State<OnboardingFlow> createState() => _OnboardingFlowState();
+}
+
+class _OnboardingFlowState extends State<OnboardingFlow> {
+  final PageController _controller = PageController();
+  int currentIndex = 0;
+  Timer? _timer;
+
+  final List<Map<String, dynamic>> pages = [
+    // 🔹 FIRST PAGE — LOGO
+    {"type": "logo"},
+
+    // 🔹 ONBOARDING PAGES
+    {
+      "type": "content",
+      "title": "Create Account in Minutes",
+      "subtitle":
+      "Start investing quickly with a simple, secure, and guided signup process.",
+      "icon": Icons.flash_on_rounded,
+    },
+    {
+      "type": "content",
+      "title": "Shariah & Non-Shariah Options",
+      "subtitle":
+      "Choose transparent investment options aligned with your personal values.",
+      "icon": Icons.verified_user_rounded,
+    },
+    {
+      "type": "content",
+      "title": "Quiz-Based Risk Profiling",
+      "subtitle":
+      "Answer a short quiz to receive AI-powered investment recommendations.",
+      "icon": Icons.analytics_rounded,
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _startAutoSlide();
+  }
+
+  void _startAutoSlide() {
+    _timer?.cancel();
+
+    // 🔹 Delay for first page (logo) longer
+    Duration delay =
+    currentIndex == 0 ? const Duration(seconds: 5) : const Duration(seconds: 3);
+
+    _timer = Timer(delay, () {
+      if (!mounted) return;
+
+      if (currentIndex < pages.length - 1) {
+        currentIndex++;
+      } else {
+        currentIndex = 0;
+      }
+
+      _controller.animateToPage(
+        currentIndex,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+
+      _startAutoSlide(); // restart timer
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-
     return Scaffold(
       backgroundColor: Colors.black, // Full pure black background
       body: SafeArea(

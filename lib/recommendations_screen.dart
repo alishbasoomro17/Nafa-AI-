@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import 'package:op/recommendation_page.dart';
+import 'package:op/recommendation_page.dart' hide Widget;
 
 class RecommendationScreen extends StatefulWidget {
   final String riskCategory;

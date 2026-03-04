@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
-
 import 'fund_page.dart';
 import 'home_page.dart';
 import 'profile_page.dart';
 import 'customer_support_page.dart';
+
+const Color purpleAccent = Color(0xFF6E4BD8);
+const Color greenMain = Color(0xFFAAF308);
 
 class RecommendationPage extends StatefulWidget {
   const RecommendationPage({super.key});
@@ -15,7 +17,6 @@ class RecommendationPage extends StatefulWidget {
 
 class _RecommendationPageState extends State<RecommendationPage> {
   final AudioPlayer _audioPlayer = AudioPlayer();
-  int? selectedCardIndex;
 
   void _playSound() async {
     try {
@@ -93,20 +94,37 @@ class _RecommendationPageState extends State<RecommendationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-
-      // 🔹 BODY
       body: Column(
         children: [
           const SizedBox(height: 24),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text(
-              "Recommendations",
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    _playSound();
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const HomePage()),
+                    );
+                  },
+                  child: const Icon(
+                    Icons.arrow_back,
+                    color: Colors.white,
+                    size: 26,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  "Recommendations for you",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 12),
@@ -114,18 +132,13 @@ class _RecommendationPageState extends State<RecommendationPage> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: ListView.builder(
+                physics: const BouncingScrollPhysics(),
                 itemCount: stocks.length,
                 itemBuilder: (context, index) {
                   final stock = stocks[index];
-                  final isSelected = selectedCardIndex == index;
-
                   return GestureDetector(
                     onTap: () {
                       _playSound();
-                      setState(() {
-                        selectedCardIndex = index;
-                      });
-
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -134,78 +147,110 @@ class _RecommendationPageState extends State<RecommendationPage> {
                         ),
                       );
                     },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      margin: const EdgeInsets.only(bottom: 10),
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 16),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: isSelected
-                            ? const Color(0xFFAAF308)
-                            : const Color(0x1F1A0F2F),
+                        color: const Color(0x1F1A0F2F),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: const Color(0xFF6E4BD8).withOpacity(0.7),
+                          color: purpleAccent.withOpacity(0.7),
                           width: 1,
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.4),
+                            blurRadius: 5,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                       ),
-                      child: Column(
+                      child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            stock["title"],
-                            style: TextStyle(
-                              color:
-                              isSelected ? Colors.black : Colors.white,
-                              fontWeight: FontWeight.bold,
+                          Container(
+                            width: 45,
+                            height: 45,
+                            decoration: BoxDecoration(
+                              color: purpleAccent.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.trending_up,
+                              color: purpleAccent,
+                              size: 26,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            stock["subtitle"],
-                            style: TextStyle(
-                              color: isSelected
-                                  ? Colors.black87
-                                  : Colors.white70,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  stock["title"],
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  stock["subtitle"],
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    _tag(stock["risk"],
+                                        _riskColor(stock["risk"])),
+                                    const SizedBox(width: 6),
+                                    _tag(
+                                      stock["shariah"]
+                                          ? "Shariah"
+                                          : "Non-Shariah",
+                                      stock["shariah"]
+                                          ? greenMain
+                                          : Colors.redAccent,
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Row(
+                          const SizedBox(width: 8),
+                          Column(
                             children: [
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
+                                    horizontal: 10, vertical: 5),
                                 decoration: BoxDecoration(
-                                  color: _riskColor(stock["risk"]),
+                                  color: purpleAccent.withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
-                                  stock["risk"],
+                                  stock["percentChange"],
                                   style: const TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 11,
+                                    color: purpleAccent,
                                     fontWeight: FontWeight.bold,
+                                    fontSize: 13,
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 6),
+                              const SizedBox(height: 8),
                               Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.all(6),
                                 decoration: BoxDecoration(
-                                  color: stock["shariah"]
-                                      ? Colors.greenAccent
-                                      : Colors.redAccent,
+                                  color: purpleAccent,
                                   borderRadius: BorderRadius.circular(6),
                                 ),
-                                child: Text(
-                                  stock["shariah"]
-                                      ? "Shariah"
-                                      : "Non-Shariah",
-                                  style: const TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                child: const Icon(
+                                  Icons.arrow_forward,
+                                  color: Colors.white,
+                                  size: 18,
                                 ),
                               ),
                             ],
@@ -220,55 +265,68 @@ class _RecommendationPageState extends State<RecommendationPage> {
           ),
         ],
       ),
+      bottomNavigationBar: _bottomNavBar(context, 1, _playSound),
+    );
+  }
 
-      // 🔹 BOTTOM NAVIGATION (same as support page)
-      bottomNavigationBar: _bottomNavBar(context, 1),
+  Widget _tag(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.black,
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 }
 
-// ---------------- Bottom Navigation ----------------
-Widget _bottomNavBar(BuildContext context, int currentIndex) {
+// Bottom Navigation Bar with Sound
+Widget _bottomNavBar(
+    BuildContext context, int currentIndex, VoidCallback playSound) {
   return BottomNavigationBar(
     backgroundColor: Colors.black,
-    selectedItemColor: Colors.greenAccent,
+    selectedItemColor: greenMain,
     unselectedItemColor: Colors.white,
     currentIndex: currentIndex,
     type: BottomNavigationBarType.fixed,
     onTap: (index) {
+      playSound(); // 🔊 play sound on every tab tap
+      if (index == currentIndex) return; // do nothing if same tab
       switch (index) {
         case 0:
           Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const HomePage()),
-          );
+              context, MaterialPageRoute(builder: (_) => const HomePage()));
           break;
         case 1:
           Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const RecommendationPage()),
-          );
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const RecommendationPage()));
           break;
         case 2:
           Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const CustomerSupportPage()),
-          );
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const CustomerSupportPage()));
           break;
         case 3:
           Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const ProfilePage()),
-          );
+              context, MaterialPageRoute(builder: (_) => const ProfilePage()));
           break;
       }
     },
     items: const [
       BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-      BottomNavigationBarItem(
-          icon: Icon(Icons.star), label: "Recommendation"),
-      BottomNavigationBarItem(
-          icon: Icon(Icons.support_agent), label: "Support"),
+      BottomNavigationBarItem(icon: Icon(Icons.star), label: "Recommendation"),
+      BottomNavigationBarItem(icon: Icon(Icons.support_agent), label: "Support"),
       BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
     ],
   );

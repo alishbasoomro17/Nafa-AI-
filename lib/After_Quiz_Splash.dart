@@ -1,95 +1,95 @@
-// import 'package:flutter/material.dart';
-// import 'recommendations_screen.dart'; // Import the new destination screen
+import 'package:flutter/material.dart';
+import 'package:op/recommendation_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-// class AfterQuizSplash extends StatelessWidget {
-//   const AfterQuizSplash({super.key});
+class AfterQuizSplash extends StatefulWidget {
+  const AfterQuizSplash({super.key});
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor: Colors.black,
-//       body: SafeArea(
-//         child: Column(
-//           children: [
-//             Expanded(
-//               child: Center(
-//                 child: Column(
-//                   mainAxisSize: MainAxisSize.min,
-//                   children: const [
-//                     // Check icon
-//                     Icon(
-//                       Icons.check_circle_outline,
-//                       color: Color(0xFFAAF308),
-//                       size: 100,
-//                     ),
-//                     SizedBox(height: 20),
-//                     // Title
-//                     Text(
-//                       "Quiz Complete!",
-//                       style: TextStyle(
-//                         color: Colors.white,
-//                         fontSize: 28,
-//                         fontWeight: FontWeight.bold,
-//                       ),
-//                     ),
-//                     SizedBox(height: 10),
-//                     // Subtitle
-//                     Text(
-//                       "We're calculating your risk profile.",
-//                       textAlign: TextAlign.center,
-//                       style: TextStyle(
-//                         color: Colors.white70,
-//                         fontSize: 16,
-//                       ),
-//                     ),
-//                   ],
-//                 ),
-//               ),
-//             ),
+  @override
+  State<AfterQuizSplash> createState() => _AfterQuizSplashState();
+}
 
-//             // Add a little Spacer before button to move it slightly up
-//             const SizedBox(height: 20),
+class _AfterQuizSplashState extends State<AfterQuizSplash> {
+  String? riskCategory;
 
-//             // Green See Recommendations Button
-//             Padding(
-//               padding: const EdgeInsets.symmetric(horizontal: 24.0),
-//               child: SizedBox(
-//                 width: double.infinity,
-//                 height: 55,
-//                 child: ElevatedButton(
-//                   style: ElevatedButton.styleFrom(
-//                     backgroundColor: const Color(0xFFAAF308), // Green color
-//                     shape: RoundedRectangleBorder(
-//                       borderRadius: BorderRadius.circular(12),
-//                     ),
-//                     elevation: 8,
-//                     shadowColor: const Color(0xFFAAF308).withOpacity(0.4),
-//                   ),
-//                   onPressed: () {
-//                     // Navigate to the recommendations page
-//                     Navigator.of(context).push(
-//                       MaterialPageRoute(
-//                         builder: (context) => const RecommendationScreen(),
-//                       ),
-//                     );
-//                   },
-//                   child: const Text(
-//                     "See Recommendations",
-//                     style: TextStyle(
-//                       fontSize: 18,
-//                       fontWeight: FontWeight.w600,
-//                       color: Colors.black, // Black text on green button
-//                     ),
-//                   ),
-//                 ),
-//               ),
-//             ),
+  @override
+  void initState() {
+    super.initState();
+    _loadRiskCategory();
+  }
 
-//             // Extra bottom padding for spacing from screen edge
-//             const SizedBox(height: 60),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
+ Future<void> _loadRiskCategory() async {
+  final prefs = await SharedPreferences.getInstance();
+
+  while (mounted) {
+    final category = prefs.getString('riskCategory');
+    print("Checking for risk category: $category"); // Debug print
+
+    if (category != null) {
+      print("Risk category found: $category")
+      ; // Debug print
+      setState(() {
+        riskCategory = category;
+      });
+      break; // stop checking once we have it
+    }
+
+    await Future.delayed(const Duration(milliseconds: 500));
+  }
+}
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+  child: Center(
+    child: riskCategory == null
+        ? Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              CircularProgressIndicator(
+                color: Color(0xFFAAF308),
+              ),
+              SizedBox(height: 20),
+              Text(
+                "Calculating your risk profile...",
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          )
+        : Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.check_circle_outline,
+                color: Color(0xFFAAF308),
+                size: 100,
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                "Quiz Completed!",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                "You are $riskCategory",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+  ),
+),);
+  }
+}
+
