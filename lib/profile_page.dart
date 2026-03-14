@@ -3,7 +3,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'home_page.dart';
 import 'signup.dart';
 import 'customer_support_page.dart';
-import 'recommendations_screen.dart';
+// import 'recommendations_screen.dart';
 
 const Color purpleAccent = Color(0xFF6E4BD8);
 const Color greenMain = Color(0xFFAAF308);

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:op/hello.dart';
-import 'package:op/quiz_screen.dart';
+import 'package:op/recommendations_screen.dart';
 
 void main() {
   runApp(const MyApp());

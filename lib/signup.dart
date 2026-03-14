@@ -229,7 +229,6 @@ class _SignupScreenState extends State<SignupScreen> {
                           const SizedBox(width: 20),
                           _socialIcon(Icons.apple),
                           const SizedBox(width: 20),
-                          _socialIcon(Icons.facebook),
                         ],
                       ),
                       const SizedBox(height: 30),
