@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'recommendation_page.dart';
+import 'recommendations_screen.dart';
 import 'customer_support_page.dart';
 import 'profile_page.dart';
+
 import 'GuidelinesPage.dart';
 import 'course_page.dart'; // New page import
 
@@ -143,15 +144,15 @@ Widget _profileTile(BuildContext context, IconData icon, String title, String va
 Widget _actionGrid(BuildContext context) {
   return Row(
     children: [
-      _actionBox(
-        icon: Icons.trending_up,
-        title: "Recommendations",
-        color: purpleAccent,
-        onTap: () {
-          _playClickSound();
-          Navigator.push(context, MaterialPageRoute(builder: (_) => const RecommendationPage()));
-        },
-      ),
+      // _actionBox(
+      //   icon: Icons.trending_up,
+      //   title: "Recommendations",
+      //   color: purpleAccent,
+      //   onTap: () {
+      //     _playClickSound();
+      //     Navigator.push(context, MaterialPageRoute(builder: (_) => const RecommendationScreen()));
+      //   },
+      // ),
       const SizedBox(width: 12),
       _actionBox(
         icon: Icons.support_agent,
@@ -330,9 +331,9 @@ Widget _bottomNavBar(BuildContext context, int currentIndex) {
         case 0:
           Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomePage()));
           break;
-        case 1:
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const RecommendationPage()));
-          break;
+        // case 1:
+        //   Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const RecommendationPage()));
+        //   break;
         case 2:
           Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const CustomerSupportPage()));
           break;

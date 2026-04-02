@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'home_page.dart';
-import 'recommendation_page.dart';
+// import 'recommendations_screen.dart';
 import 'profile_page.dart';
 
 const Color purpleAccent = Color(0xFF6E4BD8);
@@ -251,16 +251,8 @@ class _CustomerSupportPageState extends State<CustomerSupportPage> {
 
 // Bottom navigation with sound
 // AudioPlayer instance
-final AudioPlayer _audioPlayer = AudioPlayer();
 
 // Function to play click sound
-void _playClickSound() async {
-  try {
-    await _audioPlayer.play(AssetSource('success.mp3')); // your tune here
-  } catch (e) {
-    debugPrint("Error playing sound: $e");
-  }
-}
 
 // Bottom navigation with sound
 Widget _bottomNavBar(
@@ -283,12 +275,12 @@ Widget _bottomNavBar(
           Navigator.pushReplacement(
               context, MaterialPageRoute(builder: (_) => const HomePage()));
           break;
-        case 1:
-          Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                  builder: (_) => const RecommendationPage()));
-          break;
+        // case 1:
+        //   Navigator.pushReplacement(
+        //       context,
+        //       MaterialPageRoute(
+        //           builder: (_) => const RecommendationPage()));
+        //   break;
         case 2:
           Navigator.pushReplacement(
               context,

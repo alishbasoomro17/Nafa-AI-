@@ -1,407 +1,411 @@
-// import 'package:flutter/material.dart';
-// import 'signup.dart';
-// import 'forgot_password.dart';
-// import 'quiz_screen.dart';
-// import 'package:audioplayers/audioplayers.dart'; // Added for sound
+import 'package:flutter/material.dart';
+import 'signup.dart';
+import 'forgot_password.dart';
+import 'quiz_screen.dart';
+import 'package:audioplayers/audioplayers.dart'; 
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
-// class LoginScreen extends StatefulWidget {
-//   const LoginScreen({super.key});
 
-//   @override
-//   State<LoginScreen> createState() => _LoginScreenState();
-// }
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
-// class _LoginScreenState extends State<LoginScreen> {
-//   final _formKey = GlobalKey<FormState>();
-//   final TextEditingController _emailController = TextEditingController();
-//   final TextEditingController _passwordController = TextEditingController();
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
 
-//   bool isPasswordVisible = false;
+class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
-//   final AudioPlayer _audioPlayer = AudioPlayer(); // Audio player instance
+  bool isPasswordVisible = false;
 
-//   @override
-//   void dispose() {
-//     _emailController.dispose();
-//     _passwordController.dispose();
-//     super.dispose();
-//   }
+  final AudioPlayer _audioPlayer = AudioPlayer(); // Audio player instance
 
-//   // ----- Play sound function -----
-//   void _playButtonSound() async {
-//     try {
-//       await _audioPlayer.play(AssetSource('success.mp3')); // Ensure success.mp3 is in assets
-//     } catch (e) {
-//       print("Error playing sound: $e");
-//     }
-//   }
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
-//   // ----- Validation functions -----
-//   String? _validateEmail(String? value) {
-//     if (value == null || value.isEmpty) return 'Email is required';
-//     final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-//     if (!emailRegex.hasMatch(value)) return 'Enter a valid email address';
-//     return null;
-//   }
+  // ----- Play sound function -----
+  void _playButtonSound() async {
+    try {
+      await _audioPlayer.play(AssetSource('success.mp3')); // Ensure success.mp3 is in assets
+    } catch (e) {
+      print("Error playing sound: $e");
+    }
+  }
 
-//   String? _validatePassword(String? value) {
-//     if (value == null || value.isEmpty) return 'Password is required';
-//     return null;
-//   }
+  // ----- Validation functions -----
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) return 'Email is required';
+    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+    if (!emailRegex.hasMatch(value)) return 'Enter a valid email address';
+    return null;
+  }
 
-//   // ----- Login handler -----
-//   void _handleLogin() async {
-//     _playButtonSound(); // Play sound
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) return 'Password is required';
+    return null;
+  }
 
-//     if (_formKey.currentState!.validate()) {
-//       // Prepare data to send
-//       final userData = {
-//         "username": _emailController.text,
-//         "password": _passwordController.text,
-//         "role":"broker"
-//       };
-//       print(userData);
+  // ----- Login handler -----
+  void _handleLogin() async {
+    _playButtonSound(); // Play sound
 
-//       try {
-//         final response = await http.post(
-//           //Uri.parse("http://127.0.0.1:3000/users/login"), // Your backend URL
-//           //headers: {"Content-Type": "application/json"},
-//           //body: jsonEncode(userData),
-//         );
+    if (_formKey.currentState!.validate()) {
+      // Prepare data to send
+      final userData = {
+        "username": _emailController.text,
+        "password": _passwordController.text,
+        "role":"broker"
+      };
+      print(userData);
 
-//         if (response.statusCode == 201) {
-//           print("Success: ${response.body}");
-//           final data = jsonDecode(response.body);
+      try {
+        final response = await http.post(
+          Uri.parse("http://127.0.0.1:3000/users/login"),
+          headers: {"Content-Type": "application/json"},
+          body: jsonEncode(userData),
+        );
 
-//           final token = data["access_token"];
+        if (response.statusCode == 201) {
+          print("Success: ${response.body}");
+          final data = jsonDecode(response.body);
 
-//           // Save token
-//           final prefs = await SharedPreferences.getInstance();
-//           await prefs.setString("token", token);
+          final token = data["access_token"];
 
-//           print("TOKEN SAVED: $token");
-//           ScaffoldMessenger.of(context).showSnackBar(
-//             const SnackBar(content: Text("Login Successful!")),
-//           );
+          // Save token
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString("token", token);
 
-//           Future.delayed(const Duration(seconds: 1), () {
-//             Navigator.pushReplacement(
-//               context,
-//               MaterialPageRoute(builder: (_) => const QuizScreen()),
-//             );
-//           });
-//         } else {
-//           print("Error: ${response.body}");
-//           ScaffoldMessenger.of(context).showSnackBar(
-//             SnackBar(content: Text("Signup Failed: ${response.statusCode}")),
-//           );
-//         }
-//       } catch (e) {
-//         print("Exception: $e");
-//         ScaffoldMessenger.of(context).showSnackBar(
-//           SnackBar(content: Text("Network Error: $e")),
-//         );
-//       }
-//     }
-//   }
+          print("TOKEN SAVED: $token");
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Login Successful!")),
+          );
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor: Colors.black,
-//       body: SafeArea(
-//         child: SingleChildScrollView(
-//           padding: const EdgeInsets.symmetric(vertical: 20),
-//           child: Column(
-//             mainAxisAlignment: MainAxisAlignment.center,
-//             children: [
-//               const SizedBox(height: 30),
+          Future.delayed(const Duration(seconds: 1), () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const QuizScreen()),
+            );
+          });
+        } else {
+          print("Error: ${response.body}");
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Signup Failed: ${response.statusCode}")),
+          );
+        }
+      } catch (e) {
+        print("Exception: $e");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Network Error: $e")),
+        );
+      }
+    }
+  }
 
-//               // Mascot
-//               Container(
-//                 width: 100,
-//                 height: 100,
-//                 decoration: BoxDecoration(
-//                   color: Colors.black,
-//                   shape: BoxShape.circle,
-//                   boxShadow: [
-//                     BoxShadow(
-//                       color: const Color(0xFFAAF308).withOpacity(0.6),
-//                       blurRadius: 16,
-//                       spreadRadius: 3,
-//                     ),
-//                   ],
-//                 ),
-//                 child: Padding(
-//                   padding: const EdgeInsets.all(10),
-//                   child: Image.asset("assets/logo1.png", fit: BoxFit.contain),
-//                 ),
-//               ),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(height: 30),
 
-//               const SizedBox(height: 30),
+              // Mascot
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: Colors.black,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFAAF308).withOpacity(0.6),
+                      blurRadius: 16,
+                      spreadRadius: 3,
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Image.asset("assets/logo1.png", fit: BoxFit.contain),
+                ),
+              ),
 
-//               Padding(
-//                 padding: const EdgeInsets.symmetric(horizontal: 24),
-//                 child: Form(
-//                   key: _formKey,
-//                   child: Column(
-//                     crossAxisAlignment: CrossAxisAlignment.start,
-//                     children: [
-//                       _label("Email Address"),
-//                       const SizedBox(height: 8),
-//                       _inputField(
-//                         controller: _emailController,
-//                         hint: "example@gmail.com",
-//                         validator: _validateEmail,
-//                         keyboardType: TextInputType.emailAddress,
-//                       ),
-//                       const SizedBox(height: 18),
+              const SizedBox(height: 30),
 
-//                       _label("Password"),
-//                       const SizedBox(height: 8),
-//                       _passwordInput(
-//                         controller: _passwordController,
-//                         validator: _validatePassword,
-//                       ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _label("Email Address"),
+                      const SizedBox(height: 8),
+                      _inputField(
+                        controller: _emailController,
+                        hint: "example@gmail.com",
+                        validator: _validateEmail,
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                      const SizedBox(height: 18),
 
-//                       const SizedBox(height: 8),
+                      _label("Password"),
+                      const SizedBox(height: 8),
+                      _passwordInput(
+                        controller: _passwordController,
+                        validator: _validatePassword,
+                      ),
 
-//                       // Forgot password with sound
-//                       Align(
-//                         alignment: Alignment.centerRight,
-//                         child: GestureDetector(
-//                           onTap: () {
-//                             _playButtonSound(); // Play sound on forgot password
-//                             Navigator.push(
-//                               context,
-//                               MaterialPageRoute(
-//                                 builder: (_) => const ForgotPasswordScreen(),
-//                               ),
-//                             );
-//                           },
-//                           child: const Text(
-//                             "Forgot Password?",
-//                             style: TextStyle(
-//                               color: Colors.white60,
-//                               fontSize: 13,
-//                               decoration: TextDecoration.underline,
-//                             ),
-//                           ),
-//                         ),
-//                       ),
+                      const SizedBox(height: 8),
 
-//                       const SizedBox(height: 30),
+                      // Forgot password with sound
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: GestureDetector(
+                          onTap: () {
+                            _playButtonSound(); // Play sound on forgot password
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ForgotPasswordScreen(),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            "Forgot Password?",
+                            style: TextStyle(
+                              color: Colors.white60,
+                              fontSize: 13,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ),
 
-//                       // Login Button
-//                       SizedBox(
-//                         width: double.infinity,
-//                         height: 50,
-//                         child: ElevatedButton(
-//                           style: ElevatedButton.styleFrom(
-//                             backgroundColor: const Color(0xFF6E4BD8),
-//                             foregroundColor: Colors.white,
-//                             shape: RoundedRectangleBorder(
-//                               borderRadius: BorderRadius.circular(14),
-//                             ),
-//                             elevation: 8,
-//                           ),
-//                           onPressed: _handleLogin,
-//                           child: const Text(
-//                             "Log In",
-//                             style: TextStyle(
-//                               fontSize: 16,
-//                               fontWeight: FontWeight.w700,
-//                             ),
-//                           ),
-//                         ),
-//                       ),
+                      const SizedBox(height: 30),
 
-//                       const SizedBox(height: 24),
+                      // Login Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF6E4BD8),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            elevation: 8,
+                          ),
+                          onPressed: _handleLogin,
+                          child: const Text(
+                            "Log In",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
 
-//                       Row(
-//                         children: [
-//                           Expanded(child: Divider(color: Colors.white24)),
-//                           const Padding(
-//                             padding: EdgeInsets.symmetric(horizontal: 12),
-//                             child: Text("Or",
-//                                 style: TextStyle(
-//                                     color: Colors.white54, fontSize: 13)),
-//                           ),
-//                           Expanded(child: Divider(color: Colors.white24)),
-//                         ],
-//                       ),
-//                       const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-//                       Row(
-//                         mainAxisAlignment: MainAxisAlignment.center,
-//                         children: [
-//                           _socialIcon(Icons.g_mobiledata_rounded),
-//                           const SizedBox(width: 20),
-//                           _socialIcon(Icons.apple),
-//                           const SizedBox(width: 20),
-//                           _socialIcon(Icons.facebook),
-//                         ],
-//                       ),
+                      Row(
+                        children: [
+                          Expanded(child: Divider(color: Colors.white24)),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 12),
+                            child: Text("Or",
+                                style: TextStyle(
+                                    color: Colors.white54, fontSize: 13)),
+                          ),
+                          Expanded(child: Divider(color: Colors.white24)),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
 
-//                       const SizedBox(height: 30),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _socialIcon(Icons.g_mobiledata_rounded),
+                          const SizedBox(width: 20),
+                          _socialIcon(Icons.apple),
+                          const SizedBox(width: 20),
+                          _socialIcon(Icons.facebook),
+                        ],
+                      ),
 
-//                       // Sign Up tap with sound
-//                       Center(
-//                         child: GestureDetector(
-//                           onTap: () {
-//                             _playButtonSound(); // Play sound on sign up text tap
-//                             Navigator.pushReplacement(
-//                               context,
-//                               MaterialPageRoute(
-//                                 builder: (_) => const SignupScreen(),
-//                               ),
-//                             );
-//                           },
-//                           child: RichText(
-//                             text: const TextSpan(
-//                               text: "Don't have an account? ",
-//                               style: TextStyle(color: Colors.white60, fontSize: 14),
-//                               children: [
-//                                 TextSpan(
-//                                   text: "Sign Up",
-//                                   style: TextStyle(
-//                                     color: Color(0xFFAAF308),
-//                                     fontWeight: FontWeight.w700,
-//                                   ),
-//                                 ),
-//                               ],
-//                             ),
-//                           ),
-//                         ),
-//                       ),
+                      const SizedBox(height: 30),
 
-//                       const SizedBox(height: 20),
-//                     ],
-//                   ),
-//                 ),
-//               )
-//             ],
-//           ),
-//         ),
-//       ),
-//     );
-//   }
+                      // Sign Up tap with sound
+                      Center(
+                        child: GestureDetector(
+                          onTap: () {
+                            _playButtonSound(); // Play sound on sign up text tap
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const SignupScreen(),
+                              ),
+                            );
+                          },
+                          child: RichText(
+                            text: const TextSpan(
+                              text: "Don't have an account? ",
+                              style: TextStyle(color: Colors.white60, fontSize: 14),
+                              children: [
+                                TextSpan(
+                                  text: "Sign Up",
+                                  style: TextStyle(
+                                    color: Color(0xFFAAF308),
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
 
-//   Widget _label(String text) {
-//     return Text(
-//       text,
-//       style: const TextStyle(
-//         color: Colors.white70,
-//         fontSize: 14,
-//         fontWeight: FontWeight.w500,
-//         letterSpacing: 0.5,
-//       ),
-//     );
-//   }
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-//   Widget _inputField({
-//     required TextEditingController controller,
-//     required String hint,
-//     required String? Function(String?) validator,
-//     required TextInputType keyboardType,
-//   }) {
-//     return TextFormField(
-//       controller: controller,
-//       validator: validator,
-//       keyboardType: keyboardType,
-//       style: const TextStyle(color: Colors.white, fontSize: 15),
-//       decoration: InputDecoration(
-//         filled: true,
-//         fillColor: const Color(0xFF0D0D0D),
-//         hintText: hint,
-//         hintStyle: const TextStyle(color: Colors.white38, fontSize: 15),
-//         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-//         border: OutlineInputBorder(
-//           borderRadius: BorderRadius.circular(12),
-//           borderSide: const BorderSide(color: Colors.white12),
-//         ),
-//         enabledBorder: OutlineInputBorder(
-//           borderRadius: BorderRadius.circular(12),
-//           borderSide: const BorderSide(color: Colors.white12),
-//         ),
-//         focusedBorder: OutlineInputBorder(
-//           borderRadius: BorderRadius.circular(12),
-//           borderSide: const BorderSide(color: Color(0xFFAAF308), width: 1.5),
-//         ),
-//         errorBorder: OutlineInputBorder(
-//           borderRadius: BorderRadius.circular(12),
-//           borderSide: const BorderSide(color: Colors.red, width: 1.5),
-//         ),
-//         focusedErrorBorder: OutlineInputBorder(
-//           borderRadius: BorderRadius.circular(12),
-//           borderSide: const BorderSide(color: Colors.red, width: 2),
-//         ),
-//         isDense: true,
-//       ),
-//     );
-//   }
+  Widget _label(String text) {
+    return Text(
+      text,
+      style: const TextStyle(
+        color: Colors.white70,
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 0.5,
+      ),
+    );
+  }
 
-//   Widget _passwordInput({
-//     required TextEditingController controller,
-//     required String? Function(String?) validator,
-//   }) {
-//     return TextFormField(
-//       controller: controller,
-//       validator: validator,
-//       obscureText: !isPasswordVisible,
-//       style: const TextStyle(color: Colors.white, fontSize: 15),
-//       decoration: InputDecoration(
-//         filled: true,
-//         fillColor: const Color(0xFF0D0D0D),
-//         hintText: "Enter password",
-//         hintStyle: const TextStyle(color: Colors.white38, fontSize: 15),
-//         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-//         border: OutlineInputBorder(
-//           borderRadius: BorderRadius.circular(12),
-//           borderSide: const BorderSide(color: Colors.white12),
-//         ),
-//         enabledBorder: OutlineInputBorder(
-//           borderRadius: BorderRadius.circular(12),
-//           borderSide: const BorderSide(color: Colors.white12),
-//         ),
-//         focusedBorder: OutlineInputBorder(
-//           borderRadius: BorderRadius.circular(12),
-//           borderSide: const BorderSide(color: Color(0xFFAAF308), width: 1.5),
-//         ),
-//         errorBorder: OutlineInputBorder(
-//           borderRadius: BorderRadius.circular(12),
-//           borderSide: const BorderSide(color: Colors.red, width: 1.5),
-//         ),
-//         focusedErrorBorder: OutlineInputBorder(
-//           borderRadius: BorderRadius.circular(12),
-//           borderSide: const BorderSide(color: Colors.red, width: 2),
-//         ),
-//         isDense: true,
-//         suffixIcon: IconButton(
-//           icon: Icon(
-//             isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-//             color: Colors.white54,
-//             size: 20,
-//           ),
-//           onPressed: () {
-//             setState(() {
-//               isPasswordVisible = !isPasswordVisible;
-//             });
-//           },
-//         ),
-//       ),
-//     );
-//   }
+  Widget _inputField({
+    required TextEditingController controller,
+    required String hint,
+    required String? Function(String?) validator,
+    required TextInputType keyboardType,
+  }) {
+    return TextFormField(
+      controller: controller,
+      validator: validator,
+      keyboardType: keyboardType,
+      style: const TextStyle(color: Colors.white, fontSize: 15),
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: const Color(0xFF0D0D0D),
+        hintText: hint,
+        hintStyle: const TextStyle(color: Colors.white38, fontSize: 15),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.white12),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.white12),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFAAF308), width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red, width: 1.5),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
+        ),
+        isDense: true,
+      ),
+    );
+  }
 
-//   Widget _socialIcon(IconData icon) {
-//     return Container(
-//       padding: const EdgeInsets.all(14),
-//       decoration: BoxDecoration(
-//         shape: BoxShape.circle,
-//         color: const Color(0xFF0D0D0D),
-//         border: Border.all(color: Colors.white24),
-//       ),
-//       child: Icon(icon, color: const Color(0xFFAAF308), size: 24),
-//     );
-//   }
-// }
+  Widget _passwordInput({
+    required TextEditingController controller,
+    required String? Function(String?) validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      validator: validator,
+      obscureText: !isPasswordVisible,
+      style: const TextStyle(color: Colors.white, fontSize: 15),
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: const Color(0xFF0D0D0D),
+        hintText: "Enter password",
+        hintStyle: const TextStyle(color: Colors.white38, fontSize: 15),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.white12),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.white12),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFAAF308), width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red, width: 1.5),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
+        ),
+        isDense: true,
+        suffixIcon: IconButton(
+          icon: Icon(
+            isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+            color: Colors.white54,
+            size: 20,
+          ),
+          onPressed: () {
+            setState(() {
+              isPasswordVisible = !isPasswordVisible;
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _socialIcon(IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: const Color(0xFF0D0D0D),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: Icon(icon, color: const Color(0xFFAAF308), size: 24),
+    );
+  }
+}
