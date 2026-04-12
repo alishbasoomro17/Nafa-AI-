@@ -37,7 +37,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:3000/ai/recommend-by-risk'),
+        Uri.parse('http://13.61.163.243/ai/recommend-by-risk'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'risk': widget.riskCategory}),
       );

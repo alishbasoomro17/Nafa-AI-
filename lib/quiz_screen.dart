@@ -41,7 +41,7 @@ class _QuizScreenState extends State<QuizScreen> {
     try
     {
       final response = await http.post(
-        Uri.parse("http://127.0.0.1:3000/quiz/submit-answers/$userId"),
+        Uri.parse("http://13.61.163.243/quiz/submit-answers/$userId"),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",

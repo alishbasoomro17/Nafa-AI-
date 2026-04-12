@@ -49,36 +49,30 @@ class _FundViewPageState extends State<FundViewPage> {
 Future<void> get_prediction() async {
   setState(() => isPredicting = true);
   try {
-    final response = await http.post(
-      Uri.parse("http://127.0.0.1:3000/predictor/analyze"),
+    final client = http.Client();
+    final response = await client.post(
+      Uri.parse("http://13.61.163.243/predictor/analyze"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({"symbol": widget.ticker}),
-    );
+    ).timeout(const Duration(seconds: 60));  // increase timeout
 
     if (response.statusCode == 201) {
-      final dynamic decoded = jsonDecode(response.body); // Use dynamic first
+      final decoded = jsonDecode(response.body);
       setState(() {
-        predictionData = decoded as Map<String, dynamic>; // Explicit cast
+        predictionData = Map<String, dynamic>.from(decoded);
         isPredicting = false;
       });
-
-print("SUCCESS: Data loaded into predictionData: $predictionData");
-    } else {
-      print("SERVER ERROR: ${response.statusCode}");
-      setState(() => isPredicting = false);
     }
   } catch (e) {
-    print("CONNECTION ERROR: $e");
+    print("ERROR: $e");
     setState(() => isPredicting = false);
   }
-}  
-   
-
+}
    
    Future<void> fetchStock() async {
     try {
       final response =
-          await http.get(Uri.parse("http://127.0.0.1:3000/stocks/${widget.ticker}"));
+          await http.get(Uri.parse("http://13.61.163.243/stocks/${widget.ticker}"));
 
       if (response.statusCode == 200) {
         setState(() {
