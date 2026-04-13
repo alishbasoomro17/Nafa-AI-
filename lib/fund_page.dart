@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 // import 'home_page.dart';
 
 // ---------------- THEME ----------------
@@ -49,9 +51,12 @@ class _FundViewPageState extends State<FundViewPage> {
 Future<void> get_prediction() async {
   setState(() => isPredicting = true);
   try {
+        final base_url = dotenv.env['base_url_local'] ?? 'No API Key Found';
+        final prod_url=dotenv.env['base_url_production'] ?? 'No API Key Found';
+
     final client = http.Client();
     final response = await client.post(
-      Uri.parse("http://13.61.163.243/predictor/analyze"),
+      Uri.parse("$prod_url/predictor/analyze"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({"symbol": widget.ticker}),
     ).timeout(const Duration(seconds: 60));  // increase timeout
@@ -71,8 +76,10 @@ Future<void> get_prediction() async {
    
    Future<void> fetchStock() async {
     try {
+          final base_url = dotenv.env['base_url_local'] ?? 'No API Key Found';
+          final prod_url = dotenv.env['base_url_production'] ?? 'No API Key Found';
       final response =
-          await http.get(Uri.parse("http://13.61.163.243/stocks/${widget.ticker}"));
+          await http.get(Uri.parse("$prod_url/stocks/${widget.ticker}"));
 
       if (response.statusCode == 200) {
         setState(() {

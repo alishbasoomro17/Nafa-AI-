@@ -3,6 +3,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'home_page.dart';
 import 'signup.dart';
 import 'customer_support_page.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 // import 'recommendations_screen.dart';
 
 const Color purpleAccent = Color(0xFF6E4BD8);

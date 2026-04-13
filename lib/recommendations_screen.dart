@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:audioplayers/audioplayers.dart';
 import 'fund_page.dart';
 import 'home_page.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 
 const Color purpleAccent = Color(0xFF6E4BD8);
 const Color greenMain = Color(0xFFAAF308);
@@ -36,8 +38,12 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     _showRiskDialog();
 
     try {
+        final base_url = dotenv.env['base_url_local'] ?? 'No API Key Found';
+        final prod_url=dotenv.env['base_url_production'] ?? 'No API Key Found';
+
+
       final response = await http.post(
-        Uri.parse('http://13.61.163.243/ai/recommend-by-risk'),
+        Uri.parse('$prod_url/ai/recommend-by-risk'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'risk': widget.riskCategory}),
       );

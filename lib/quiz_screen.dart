@@ -5,6 +5,7 @@ import 'package:audioplayers/audioplayers.dart'; // Added for sound
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';  
 
 
 
@@ -40,8 +41,11 @@ class _QuizScreenState extends State<QuizScreen> {
 
     try
     {
+      final base_url = dotenv.env['base_url_local'] ?? 'No API Key Found';
+        final prod_url=dotenv.env['base_url_production'] ?? 'No API Key Found';
+      
       final response = await http.post(
-        Uri.parse("http://13.61.163.243/quiz/submit-answers/$userId"),
+        Uri.parse("$prod_url/quiz/submit-answers/$userId"),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",

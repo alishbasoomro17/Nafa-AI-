@@ -6,6 +6,8 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 
 
 class LoginScreen extends StatefulWidget {
@@ -67,8 +69,11 @@ class _LoginScreenState extends State<LoginScreen> {
       print(userData);
 
       try {
+        final base_url = dotenv.env['base_url_local'] ?? 'No API Key Found';
+        final prod_url=dotenv.env['base_url_production'] ?? 'No API Key Found';
+
         final response = await http.post(
-          Uri.parse("http://13.61.163.243/users/login"),
+          Uri.parse("$prod_url/users/login"),
           headers: {"Content-Type": "application/json"},
           body: jsonEncode(userData),
         );

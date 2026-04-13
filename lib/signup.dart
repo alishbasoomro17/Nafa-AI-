@@ -4,6 +4,7 @@ import 'quiz_screen.dart';
 import 'package:audioplayers/audioplayers.dart'; // Added for sound
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -72,8 +73,11 @@ class _SignupScreenState extends State<SignupScreen> {
       print(userData);
 
       try {
+        final base_url = dotenv.env['base_url_local'] ?? 'No API Key Found';
+        final prod_url = dotenv.env['base_url_production'] ?? 'No API Key Found';
+        print("Base URL: $base_url");
         final response = await http.post(
-          Uri.parse("http://13.61.163.243/users/register-user"), // Your backend URL
+          Uri.parse("$prod_url/users/register-user"), // Your backend URL
           headers: {"Content-Type": "application/json"},
           body: jsonEncode(userData),
         );
