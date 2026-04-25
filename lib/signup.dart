@@ -73,9 +73,9 @@ class _SignupScreenState extends State<SignupScreen> {
       print(userData);
 
       try {
-        final base_url = dotenv.env['base_url_local'] ?? 'No API Key Found';
+        final local_url = dotenv.env['base_url_local'] ?? 'No API Key Found';
         final prod_url = dotenv.env['base_url_production'] ?? 'No API Key Found';
-        print("Base URL: $base_url");
+        print("Base URL: $prod_url");
         final response = await http.post(
           Uri.parse("$prod_url/users/register-user"), // Your backend URL
           headers: {"Content-Type": "application/json"},

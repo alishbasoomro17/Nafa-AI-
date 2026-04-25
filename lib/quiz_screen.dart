@@ -41,7 +41,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
     try
     {
-      final base_url = dotenv.env['base_url_local'] ?? 'No API Key Found';
+      final local_url = dotenv.env['base_url_local'] ?? 'No API Key Found';
         final prod_url=dotenv.env['base_url_production'] ?? 'No API Key Found';
       
       final response = await http.post(

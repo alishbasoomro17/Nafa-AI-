@@ -51,7 +51,7 @@ class _FundViewPageState extends State<FundViewPage> {
 Future<void> get_prediction() async {
   setState(() => isPredicting = true);
   try {
-        final base_url = dotenv.env['base_url_local'] ?? 'No API Key Found';
+        final local_url = dotenv.env['base_url_local'] ?? 'No API Key Found';
         final prod_url=dotenv.env['base_url_production'] ?? 'No API Key Found';
 
     final client = http.Client();
@@ -76,7 +76,7 @@ Future<void> get_prediction() async {
    
    Future<void> fetchStock() async {
     try {
-          final base_url = dotenv.env['base_url_local'] ?? 'No API Key Found';
+          final local_url = dotenv.env['base_url_local'] ?? 'No API Key Found';
           final prod_url = dotenv.env['base_url_production'] ?? 'No API Key Found';
       final response =
           await http.get(Uri.parse("$prod_url/stocks/${widget.ticker}"));
