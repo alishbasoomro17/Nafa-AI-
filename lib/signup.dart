@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:op/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'quiz_screen.dart';
 import 'package:audioplayers/audioplayers.dart'; // Added for sound
@@ -41,23 +42,32 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   // ----- Validation functions -----
-  String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) return 'Email is required';
-    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-    if (!emailRegex.hasMatch(value)) return 'Enter a valid email address';
-    return null;
-  }
+String? _validateFullName(String? value) {
+  if (value == null || value.trim().isEmpty) return 'Username is required';
+  if (value.trim().length < 6) return 'Username must be at least 6 characters';
+  if (value.trim().length > 20) return 'Username must be at most 20 characters';
+  final nameRegex = RegExp(r"^[a-zA-Z ]+$");
+  if (!nameRegex.hasMatch(value.trim())) return 'Username can only contain letters and spaces';
+  return null;
+}
 
-  String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) return 'Password is required';
-    if (value.length < 6) return 'Password must be at least 6 characters';
-    return null;
-  }
+String? _validateEmail(String? value) {
+  if (value == null || value.trim().isEmpty) return 'Email is required';
+  final emailRegex = RegExp(r'^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}$');
+  if (!emailRegex.hasMatch(value.trim())) return 'Enter a valid email address';
+  return null;
+}
 
-  String? _validateFullName(String? value) {
-    if (value == null || value.isEmpty) return 'Full Name is required';
-    return null;
-  }
+String? _validatePassword(String? value) {
+  if (value == null || value.isEmpty) return 'Password is required';
+  if (value.length < 6)  return 'Password must be at least 6 characters';
+  if (value.length > 15) return 'Password must be at most 15 characters';
+  if (!RegExp(r'[A-Z]').hasMatch(value)) return 'Password must contain at least one uppercase letter';
+  if (!RegExp(r'[a-z]').hasMatch(value)) return 'Password must contain at least one lowercase letter';
+  if (!RegExp(r'[0-9]').hasMatch(value)) return 'Password must contain at least one number';
+  if (!RegExp(r'[!@#\$%^&*(),.?":{}|<>]').hasMatch(value)) return 'Password must contain at least one special character';
+  return null;
+}
 
   void _handleSignup() async {
     _playButtonSound(); // Play sound
@@ -242,9 +252,9 @@ class _SignupScreenState extends State<SignupScreen> {
                           onTap: () {
                             // REMOVE _playButtonSound(); here
                             Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(builder: (_) => const QuizScreen()),
-                            );
+  context,
+  MaterialPageRoute(builder: (_) => const LoginScreen()),
+);
                           },
                           child: RichText(
                             text: const TextSpan(

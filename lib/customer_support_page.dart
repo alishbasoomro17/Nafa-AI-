@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:op/AllStockScreen.dart';
 import 'home_page.dart';
 // import 'recommendations_screen.dart';
 import 'profile_page.dart';
@@ -275,12 +276,12 @@ Widget _bottomNavBar(
           Navigator.pushReplacement(
               context, MaterialPageRoute(builder: (_) => const HomePage()));
           break;
-        // case 1:
-        //   Navigator.pushReplacement(
-        //       context,
-        //       MaterialPageRoute(
-        //           builder: (_) => const RecommendationPage()));
-        //   break;
+        case 1:
+          Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const AllStocksScreen()));
+          break;
         case 2:
           Navigator.pushReplacement(
               context,

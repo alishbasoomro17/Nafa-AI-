@@ -1,3 +1,4 @@
+import 'package:op/AllStockScreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -395,6 +396,10 @@ Widget _bottomNavBar(BuildContext context, int currentIndex) {
         case 0:
           Navigator.pushReplacement(
               context, MaterialPageRoute(builder: (_) => const HomePage()));
+          break;
+        case 1:
+          Navigator.pushReplacement(
+              context, MaterialPageRoute(builder: (_) => const AllStocksScreen()));
           break;
         case 2:
           Navigator.pushReplacement(context,

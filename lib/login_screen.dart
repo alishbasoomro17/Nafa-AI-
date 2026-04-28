@@ -8,7 +8,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-
+import 'home_page.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -43,77 +43,93 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // ----- Validation functions -----
-  String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) return 'Email is required';
-    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-    if (!emailRegex.hasMatch(value)) return 'Enter a valid email address';
-    return null;
-  }
+ String? _validateEmail(String? value) {
+  if (value == null || value.trim().isEmpty) return 'Email is required';
+  final emailRegex = RegExp(r'^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}$');
+  if (!emailRegex.hasMatch(value.trim())) return 'Enter a valid email address';
+  return null;
+}
 
-  String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) return 'Password is required';
-    return null;
-  }
+String? _validatePassword(String? value) {
+  if (value == null || value.isEmpty) return 'Password is required';
+  if (value.length < 6)  return 'Password must be at least 6 characters';
+  if (value.length > 15) return 'Password must be at most 15 characters';
+  if (!RegExp(r'[A-Z]').hasMatch(value)) return ' YourPassword must contain at least one uppercase letter';
+  if (!RegExp(r'[a-z]').hasMatch(value)) return 'Password must contain at least one lowercase letter';
+  if (!RegExp(r'[0-9]').hasMatch(value)) return 'Password must contain at least one number';
+  if (!RegExp(r'[!@#\$%^&*(),.?":{}|<>]').hasMatch(value)) return 'Password must contain at least one special character';
+  return null;
+}
+
 
   // ----- Login handler -----
-  void _handleLogin() async {
-    _playButtonSound(); // Play sound
+ void _handleLogin() async {
+    _playButtonSound();
 
     if (_formKey.currentState!.validate()) {
-      // Prepare data to send
       final userData = {
-        "username": _emailController.text,
+        "email": _emailController.text.trim(),
         "password": _passwordController.text,
-        "role":"broker"
       };
-      print(userData);
 
       try {
-        final local_url = dotenv.env['base_url_local'] ?? 'No API Key Found';
-        final prod_url=dotenv.env['base_url_production'] ?? 'No API Key Found';
+        final prodUrl = dotenv.env['base_url_production'] ?? '';
 
         final response = await http.post(
-          Uri.parse("$prod_url/users/login"),
+          Uri.parse("$prodUrl/users/login"),
           headers: {"Content-Type": "application/json"},
           body: jsonEncode(userData),
         );
 
-        if (response.statusCode == 201) {
-          print("Success: ${response.body}");
+        if (response.statusCode == 200 || response.statusCode == 201) {
           final data = jsonDecode(response.body);
 
           final token = data["access_token"];
+          final username = data["username"] ?? "";
+          final role = data["role"] ?? "";
+          final riskCategory = data["riskCategory"] ?? "";
 
-          // Save token
+          // ── Save to SharedPreferences ──
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString("token", token);
+          await prefs.setString("username", username);
+          await prefs.setString("role", role);
+          await prefs.setString("riskCategory", riskCategory);
 
           print("TOKEN SAVED: $token");
+
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Login Successful!")),
+            const SnackBar(
+              content: Text("Login Successful!"),
+              backgroundColor: Color(0xFF6E4BD8),
+            ),
           );
 
-          Future.delayed(const Duration(seconds: 1), () {
+          Future.delayed(const Duration(milliseconds: 800), () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (_) => const QuizScreen()),
+              MaterialPageRoute(builder: (_) => const HomePage()),
             );
           });
         } else {
-          print("Error: ${response.body}");
+          final error = jsonDecode(response.body);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Signup Failed: ${response.statusCode}")),
+            SnackBar(
+              content: Text(error["message"] ?? "Login failed"),
+              backgroundColor: Colors.redAccent,
+            ),
           );
         }
       } catch (e) {
-        print("Exception: $e");
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Network Error: $e")),
+          SnackBar(
+            content: Text("Network Error: $e"),
+            backgroundColor: Colors.redAccent,
+          ),
         );
       }
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
