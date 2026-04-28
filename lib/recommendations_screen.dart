@@ -150,18 +150,11 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   }
 
   Color _riskColor(String risk) {
-    switch (risk) {
-      case "Low":
-        return Colors.greenAccent;
-      case "Medium":
-        return Colors.orangeAccent;
-      case "High":
-        return Colors.redAccent;
-      default:
-        return Colors.white;
-    }
-  }
-
+  if (risk.contains("Low")) return Colors.greenAccent;
+  if (risk.contains("High")) return Colors.redAccent;
+  if (risk.contains("Medium")) return Colors.orangeAccent;
+  return Colors.white;
+}
   void _showSkipDialog() {
     showDialog(
       context: context,
@@ -197,15 +190,15 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     );
   }
 
-  bool _isShariah(dynamic stock) {
-    final status = (stock['Status '] ?? '').toString().toLowerCase();
+  // bool _isShariah(dynamic stock) {
+  //   final status = (stock['Status '] ?? '').toString().toLowerCase();
 
-    final bool nonHalal =
-        (status.contains('not') && status.contains('halal')) ||
-            (status.contains('non') && status.contains('halal'));
+  //   final bool nonHalal =
+  //       (status.contains('not') && status.contains('halal')) ||
+  //           (status.contains('non') && status.contains('halal'));
 
-    return !nonHalal && status.contains('halal');
-  }
+  //   return !nonHalal && status.contains('halal');
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -261,18 +254,19 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                       final stock = recommendations[index];
 
                       final title =
-                          "${stock['CompanyName']} (${stock['Ticker']})";
+                          "${stock['name']} (${stock['symbol']})";
 
                       final subtitle =
-                          stock['Sector'] ?? "Unknown";
+                          stock['sector'] ?? "Unknown";
 
-                      final percent =
-                          "${stock['DailyReturn%']?.toStringAsFixed(2) ?? '0'}%";
-
+                      final changeValue = (stock['change'] ?? 0).toDouble();
+final percent = "${changeValue.toStringAsFixed(2)}%";
                       final risk =
-                          stock['RiskLevel'] ?? "Medium";
+                          stock['risk_level'] ?? "Medium";
 
-                      final shariah = _isShariah(stock);
+                      final shariahStatus = stock['shariah_status'] ?? "Unknown";
+final isShariah = shariahStatus.toLowerCase().contains("compliant") &&
+                  !shariahStatus.toLowerCase().contains("non");
 
                       return GestureDetector(
                         onTap: () {
@@ -282,7 +276,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (_) => FundViewPage(
-                                ticker: stock['Ticker'], // Pass the Ticker value
+                                ticker: stock['symbol'], // Pass the symbol value
                               ),
                             ),
                           );
@@ -342,14 +336,24 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                                     ),
                                     const SizedBox(
                                         height: 4),
-                                    Text(
-                                      subtitle,
-                                      style: const TextStyle(
-                                          color: Colors
-                                              .white70,
-                                          fontSize:
-                                              12),
-                                    ),
+                                   Text(
+  subtitle,
+  style: const TextStyle(
+      color: Colors.white70,
+      fontSize: 12),
+),
+
+const SizedBox(height: 4),
+
+Text(
+  "Price: Rs ${(stock['current_price'] ?? 0).toString()} • Vol: ${(stock['volume'] ?? 0).toString()}",
+  style: const TextStyle(
+    color: Colors.white54,
+    fontSize: 11,
+  ),
+),
+
+const SizedBox(height: 6),
                                     const SizedBox(
                                         height: 6),
 
@@ -363,14 +367,10 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                                         const SizedBox(
                                             width: 6),
 
-                                        _tag(
-                                            shariah
-                                                ? "Shariah"
-                                                : "Non-Shariah",
-                                            shariah
-                                                ? greenMain
-                                                : Colors
-                                                    .redAccent),
+                                       _tag(
+  isShariah ? "Shariah Compliant" : "Non-Shariah Compliant",
+  isShariah ? greenMain : Colors.redAccent,
+),
                                       ],
                                     ),
                                   ],

@@ -1,3 +1,7 @@
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'recommendations_screen.dart';
@@ -5,13 +9,81 @@ import 'customer_support_page.dart';
 import 'profile_page.dart';
 
 import 'GuidelinesPage.dart';
-import 'course_page.dart'; // New page import
+import 'course_page.dart';
 
 const Color greenMain = Color(0xFFAAF308);
 const Color purpleAccent = Color(0xFF6E4BD8);
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  String riskLevel = "Loading...";
+
+  @override
+  void initState() {
+    super.initState();
+    fetchRisk();
+  }
+
+  Future<void> fetchRisk() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString("token");
+
+      if (token == null) {
+        setState(() {
+          riskLevel = "No token found";
+        });
+        return;
+      }
+
+      // Decode JWT payload to get user id
+      final parts = token.split('.');
+      final payload = json.decode(
+        utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))),
+      );
+
+      final userId = payload["id"];
+
+      final baseUrl = dotenv.env['base_url_production'];
+
+      final url = Uri.parse("$baseUrl/users/user/$userId");
+
+      final response = await http.get(
+        url,
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        print("risk response: ${response.body}");
+  final data = jsonDecode(response.body);
+
+  // ✅ Handle both array and object responses
+  final user = data is List ? data[0] : data;
+
+  setState(() {
+    riskLevel = user["riskCategory"] ?? "Unknown";
+  });
+      } else {
+        setState(() {
+          riskLevel = "Failed to load";
+        });
+      }
+    } catch (e) {
+      setState(() {
+        riskLevel = "Error loading risk";
+      });
+      debugPrint("Risk fetch error: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,14 +92,15 @@ class HomePage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.black,
         elevation: 0,
-        title: const Text("", style: TextStyle(color: greenMain, fontWeight: FontWeight.bold)),
+        title: const Text(
+          "",
+          style: TextStyle(color: greenMain, fontWeight: FontWeight.bold),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications, color: purpleAccent),
             onPressed: () {
               _playClickSound();
-              // Add Notifications page if needed
-              // Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
             },
           ),
         ],
@@ -40,11 +113,11 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 20),
             _welcomeCard(),
             const SizedBox(height: 20),
-            _profileBox(context),
+            _profileBox(context, riskLevel),
             const SizedBox(height: 20),
             _actionGrid(context),
             const SizedBox(height: 20),
-            _learningModule(context), // Both Learning Module and Financial Course inside
+            _learningModule(context),
           ],
         ),
       ),
@@ -53,7 +126,7 @@ class HomePage extends StatelessWidget {
   }
 }
 
-/* ---------------- AUDIO PLAYER ---------------- */
+/* ---------------- AUDIO ---------------- */
 final AudioPlayer _audioPlayer = AudioPlayer();
 
 void _playClickSound() async {
@@ -75,8 +148,8 @@ Widget _welcomeCard() {
       boxShadow: [
         BoxShadow(
           color: Colors.purpleAccent.withOpacity(0.3),
-          offset: const Offset(0, 5),
           blurRadius: 10,
+          offset: const Offset(0, 5),
         ),
       ],
     ),
@@ -85,7 +158,8 @@ Widget _welcomeCard() {
       children: [
         Text(
           "Welcome to Nafa AI",
-          style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
         ),
         SizedBox(height: 8),
         Text(
@@ -98,7 +172,7 @@ Widget _welcomeCard() {
 }
 
 /* ---------------- PROFILE BOX ---------------- */
-Widget _profileBox(BuildContext context) {
+Widget _profileBox(BuildContext context, String riskLevel){
   return _sectionBox(
     title: "Your Investment Profile",
     child: Column(
@@ -107,22 +181,23 @@ Widget _profileBox(BuildContext context) {
           context,
           Icons.security,
           "Risk Level",
-          "Moderate",
-          "Based on your quiz responses, you fall under the moderate risk category, allowing balanced investment decisions.",
+          riskLevel,
+          "Based on your quiz responses, you fall under a specific risk category.",
         ),
         _profileTile(
           context,
           Icons.flag,
           "Financial Goal",
           "Long-term Growth",
-          "Your primary goal is long-term wealth creation through consistent and diversified investments.",
+          "Your primary goal is long-term wealth creation.",
         ),
       ],
     ),
   );
 }
 
-Widget _profileTile(BuildContext context, IconData icon, String title, String value, String detail) {
+Widget _profileTile(BuildContext context, IconData icon, String title,
+    String value, String detail) {
   return Card(
     color: Colors.white10,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -131,7 +206,8 @@ Widget _profileTile(BuildContext context, IconData icon, String title, String va
       leading: Icon(icon, color: greenMain),
       title: Text(title, style: const TextStyle(color: Colors.white)),
       subtitle: Text(value, style: const TextStyle(color: Colors.white70)),
-      trailing: const Icon(Icons.arrow_forward_ios, color: Colors.white38, size: 16),
+      trailing:
+          const Icon(Icons.arrow_forward_ios, color: Colors.white38, size: 16),
       onTap: () {
         _playClickSound();
         _infoDialog(context, title, detail);
@@ -144,15 +220,6 @@ Widget _profileTile(BuildContext context, IconData icon, String title, String va
 Widget _actionGrid(BuildContext context) {
   return Row(
     children: [
-      // _actionBox(
-      //   icon: Icons.trending_up,
-      //   title: "Recommendations",
-      //   color: purpleAccent,
-      //   onTap: () {
-      //     _playClickSound();
-      //     Navigator.push(context, MaterialPageRoute(builder: (_) => const RecommendationScreen()));
-      //   },
-      // ),
       const SizedBox(width: 12),
       _actionBox(
         icon: Icons.support_agent,
@@ -160,7 +227,8 @@ Widget _actionGrid(BuildContext context) {
         color: greenMain,
         onTap: () {
           _playClickSound();
-          Navigator.push(context, MaterialPageRoute(builder: (_) => const CustomerSupportPage()));
+          Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const CustomerSupportPage()));
         },
       ),
     ],
@@ -184,8 +252,6 @@ Widget _actionBox({
           border: Border.all(color: color),
           gradient: LinearGradient(
             colors: [color.withOpacity(0.1), Colors.black12],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
           ),
         ),
         child: Column(
@@ -195,7 +261,10 @@ Widget _actionBox({
             const SizedBox(height: 8),
             Text(title,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14)),
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14)),
           ],
         ),
       ),
@@ -203,31 +272,31 @@ Widget _actionBox({
   );
 }
 
-/* ---------------- LEARNING MODULE WITH FINANCIAL COURSE ---------------- */
+/* ---------------- LEARNING MODULE ---------------- */
 Widget _learningModule(BuildContext context) {
   return _sectionBox(
     title: "Learning Module",
     child: Column(
       children: [
-        // Learning Module Box
         _moduleBox(
           context,
           icon: Icons.school,
           title: "Stock Market Basics",
           onTap: () {
             _playClickSound();
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const GuidelinesPage()));
+            Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const GuidelinesPage()));
           },
         ),
         const SizedBox(height: 16),
-        // Financial Beginner Course Box
         _moduleBox(
           context,
           icon: Icons.monetization_on,
           title: "Stock 101 Beginner Course",
           onTap: () {
             _playClickSound();
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const FinancialCoursePage()));
+            Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const FinancialCoursePage()));
           },
         ),
       ],
@@ -235,9 +304,10 @@ Widget _learningModule(BuildContext context) {
   );
 }
 
-/* ---------------- MODULE BOX (Reusable for Learning / Financial) ---------------- */
 Widget _moduleBox(BuildContext context,
-    {required IconData icon, required String title, required VoidCallback onTap}) {
+    {required IconData icon,
+    required String title,
+    required VoidCallback onTap}) {
   return GestureDetector(
     onTap: onTap,
     child: Container(
@@ -252,21 +322,11 @@ Widget _moduleBox(BuildContext context,
           Icon(icon, color: purpleAccent, size: 30),
           const SizedBox(width: 16),
           Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: purpleAccent,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: const Text(
-              "Go",
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
+            child: Text(title,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -275,7 +335,8 @@ Widget _moduleBox(BuildContext context,
 }
 
 /* ---------------- SECTION WRAPPER ---------------- */
-Widget _sectionBox({Widget? titleWidget, required Widget child, String? title}) {
+Widget _sectionBox(
+    {Widget? titleWidget, required Widget child, String? title}) {
   return Container(
     width: double.infinity,
     padding: const EdgeInsets.all(16),
@@ -288,7 +349,10 @@ Widget _sectionBox({Widget? titleWidget, required Widget child, String? title}) 
       children: [
         titleWidget ??
             Text(title ?? '',
-                style: const TextStyle(color: greenMain, fontSize: 18, fontWeight: FontWeight.bold)),
+                style: const TextStyle(
+                    color: greenMain,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold)),
         const SizedBox(height: 12),
         child,
       ],
@@ -296,7 +360,7 @@ Widget _sectionBox({Widget? titleWidget, required Widget child, String? title}) 
   );
 }
 
-/* ---------------- INFO DIALOG ---------------- */
+/* ---------------- DIALOG ---------------- */
 void _infoDialog(BuildContext context, String title, String message) {
   showDialog(
     context: context,
@@ -307,7 +371,8 @@ void _infoDialog(BuildContext context, String title, String message) {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text("OK", style: TextStyle(color: purpleAccent)),
+          child:
+              const Text("OK", style: TextStyle(color: purpleAccent)),
         ),
       ],
     ),
@@ -324,28 +389,29 @@ Widget _bottomNavBar(BuildContext context, int currentIndex) {
     type: BottomNavigationBarType.fixed,
     onTap: (index) {
       _playClickSound();
-
       if (index == currentIndex) return;
 
       switch (index) {
         case 0:
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomePage()));
+          Navigator.pushReplacement(
+              context, MaterialPageRoute(builder: (_) => const HomePage()));
           break;
-        // case 1:
-        //   Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const RecommendationPage()));
-        //   break;
         case 2:
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const CustomerSupportPage()));
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (_) => const CustomerSupportPage()));
           break;
         case 3:
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const ProfilePage()));
+          Navigator.pushReplacement(
+              context, MaterialPageRoute(builder: (_) => const ProfilePage()));
           break;
       }
     },
     items: const [
       BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-      BottomNavigationBarItem(icon: Icon(Icons.star), label: "Recommendation"),
-      BottomNavigationBarItem(icon: Icon(Icons.support_agent), label: "Support"),
+      BottomNavigationBarItem(
+          icon: Icon(Icons.star), label: "Recommendation"),
+      BottomNavigationBarItem(
+          icon: Icon(Icons.support_agent), label: "Support"),
       BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
     ],
   );
