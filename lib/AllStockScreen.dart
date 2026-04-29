@@ -91,7 +91,20 @@ class _AllStocksScreenState extends State<AllStocksScreen> {
       debugPrint("Sound error: $e");
     }
   }
+String _shariahLabel(String status) {
+  final s = status.toLowerCase();
+  if (s.contains('non')) return 'Non-Shariah Compliant';
+  if (s.contains('compliant')) return 'Shariah Compliant';
+  return 'Unknown';
+}
 
+Color _riskColor(String? risk) {
+  if (risk == null) return Colors.white38;
+  if (risk.contains('High')) return Colors.redAccent;
+  if (risk.contains('Medium')) return Colors.orangeAccent;
+  if (risk.contains('Low')) return greenMain;
+  return Colors.white38;
+}
   Color _shariahColor(String status) {
     final s = status.toLowerCase();
     if (s.contains('non')) return Colors.redAccent;
@@ -264,35 +277,43 @@ class _AllStocksScreenState extends State<AllStocksScreen> {
                                   const SizedBox(width: 12),
 
                                   // Info
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          "${stock['name']} (${stock['symbol']})",
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 13),
-                                        ),
-                                        const SizedBox(height: 3),
-                                        Text(
-                                          stock['sector'] ?? '',
-                                          style: const TextStyle(color: Colors.white54, fontSize: 11),
-                                        ),
-                                        const SizedBox(height: 5),
-                                        Row(
-                                          children: [
-                                            _tag(
-                                              stock['shariah_status'] ?? 'Unknown',
-                                              _shariahColor(stock['shariah_status'] ?? ''),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
+                                  // Info
+Expanded(
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        "${stock['name']} (${stock['symbol']})",
+        style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 13),
+      ),
+      const SizedBox(height: 3),
+      Text(
+        stock['sector'] ?? '',
+        style: const TextStyle(color: Colors.white54, fontSize: 11),
+      ),
+      const SizedBox(height: 5),
+      Row(
+        children: [
+          // ── Shariah tag ──
+          _tag(
+            _shariahLabel(stock['shariah_status'] ?? ''),
+            _shariahColor(stock['shariah_status'] ?? ''),
+          ),
+          const SizedBox(width: 6),
+          // ── Risk Level tag ──
+          if (stock['risk_level'] != null)
+            _tag(
+              stock['risk_level'],
+              _riskColor(stock['risk_level']),
+            ),
+        ],
+      ),
+    ],
+  ),
+),
                                   // Price & Change
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,

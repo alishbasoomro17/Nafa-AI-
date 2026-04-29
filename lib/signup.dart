@@ -78,7 +78,7 @@ String? _validatePassword(String? value) {
         "username": _fullNameController.text,
         "email": _emailController.text,
         "password": _passwordController.text,
-        "role":"broker"
+        "role":"user"
       };
       print(userData);
 
