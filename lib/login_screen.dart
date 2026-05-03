@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'signup.dart';
 import 'forgot_password.dart';
 import 'quiz_screen.dart';
-import 'package:audioplayers/audioplayers.dart'; 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -36,34 +36,45 @@ class _LoginScreenState extends State<LoginScreen> {
   // ----- Play sound function -----
   void _playButtonSound() async {
     try {
-      await _audioPlayer.play(AssetSource('success.mp3')); // Ensure success.mp3 is in assets
+      await _audioPlayer.play(
+        AssetSource('success.mp3'),
+      ); // Ensure success.mp3 is in assets
     } catch (e) {
       print("Error playing sound: $e");
     }
   }
 
   // ----- Validation functions -----
- String? _validateEmail(String? value) {
-  if (value == null || value.trim().isEmpty) return 'Email is required';
-  final emailRegex = RegExp(r'^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}$');
-  if (!emailRegex.hasMatch(value.trim())) return 'Enter a valid email address';
-  return null;
-}
+  String? _validateEmail(String? value) {
+    if (value == null || value.trim().isEmpty) return 'Email is required';
+    final emailRegex = RegExp(r'^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}$');
+    if (!emailRegex.hasMatch(value.trim())) {
+      return 'Enter a valid email address';
+    }
+    return null;
+  }
 
-String? _validatePassword(String? value) {
-  if (value == null || value.isEmpty) return 'Password is required';
-  if (value.length < 6)  return 'Password must be at least 6 characters';
-  if (value.length > 15) return 'Password must be at most 15 characters';
-  if (!RegExp(r'[A-Z]').hasMatch(value)) return ' YourPassword must contain at least one uppercase letter';
-  if (!RegExp(r'[a-z]').hasMatch(value)) return 'Password must contain at least one lowercase letter';
-  if (!RegExp(r'[0-9]').hasMatch(value)) return 'Password must contain at least one number';
-  if (!RegExp(r'[!@#\$%^&*(),.?":{}|<>]').hasMatch(value)) return 'Password must contain at least one special character';
-  return null;
-}
-
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) return 'Password is required';
+    if (value.length < 6) return 'Password must be at least 6 characters';
+    if (value.length > 15) return 'Password must be at most 15 characters';
+    if (!RegExp(r'[A-Z]').hasMatch(value)) {
+      return ' YourPassword must contain at least one uppercase letter';
+    }
+    if (!RegExp(r'[a-z]').hasMatch(value)) {
+      return 'Password must contain at least one lowercase letter';
+    }
+    if (!RegExp(r'[0-9]').hasMatch(value)) {
+      return 'Password must contain at least one number';
+    }
+    if (!RegExp(r'[!@#\$%^&*(),.?":{}|<>]').hasMatch(value)) {
+      return 'Password must contain at least one special character';
+    }
+    return null;
+  }
 
   // ----- Login handler -----
- void _handleLogin() async {
+  void _handleLogin() async {
     _playButtonSound();
 
     if (_formKey.currentState!.validate()) {
@@ -130,6 +141,7 @@ String? _validatePassword(String? value) {
       }
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -142,24 +154,15 @@ String? _validatePassword(String? value) {
             children: [
               const SizedBox(height: 30),
 
-              // Mascot
               Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFAAF308).withOpacity(0.6),
-                      blurRadius: 16,
-                      spreadRadius: 3,
-                    ),
-                  ],
-                ),
+                decoration: BoxDecoration(color: Colors.black),
                 child: Padding(
                   padding: const EdgeInsets.all(10),
-                  child: Image.asset("assets/logo1.png", fit: BoxFit.contain),
+                  child: SizedBox(
+                    width: 160,
+                    height: 160,
+                    child: Image.asset("assets/logo1.png", fit: BoxFit.contain),
+                  ),
                 ),
               ),
 
@@ -243,30 +246,6 @@ String? _validatePassword(String? value) {
 
                       const SizedBox(height: 24),
 
-                      Row(
-                        children: [
-                          Expanded(child: Divider(color: Colors.white24)),
-                          const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 12),
-                            child: Text("Or",
-                                style: TextStyle(
-                                    color: Colors.white54, fontSize: 13)),
-                          ),
-                          Expanded(child: Divider(color: Colors.white24)),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _socialIcon(Icons.g_mobiledata_rounded),
-                          const SizedBox(width: 20),
-                          _socialIcon(Icons.apple),
-                          const SizedBox(width: 20),
-                          _socialIcon(Icons.facebook),
-                        ],
-                      ),
 
                       const SizedBox(height: 30),
 
@@ -285,7 +264,10 @@ String? _validatePassword(String? value) {
                           child: RichText(
                             text: const TextSpan(
                               text: "Don't have an account? ",
-                              style: TextStyle(color: Colors.white60, fontSize: 14),
+                              style: TextStyle(
+                                color: Colors.white60,
+                                fontSize: 14,
+                              ),
                               children: [
                                 TextSpan(
                                   text: "Sign Up",
@@ -304,7 +286,7 @@ String? _validatePassword(String? value) {
                     ],
                   ),
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -340,7 +322,10 @@ String? _validatePassword(String? value) {
         fillColor: const Color(0xFF0D0D0D),
         hintText: hint,
         hintStyle: const TextStyle(color: Colors.white38, fontSize: 15),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Colors.white12),
@@ -380,7 +365,10 @@ String? _validatePassword(String? value) {
         fillColor: const Color(0xFF0D0D0D),
         hintText: "Enter password",
         hintStyle: const TextStyle(color: Colors.white38, fontSize: 15),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Colors.white12),

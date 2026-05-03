@@ -38,11 +38,11 @@ Future<void> submitRisk(String riskCategory) async {
     print("User ID for risk submission: $userId");
 
     try {
-      final local_url = dotenv.env['base_url_local'] ?? 'No API Key Found';
-      final prod_url = dotenv.env['base_url_production'] ?? 'No API Key Found';
+      final localUrl = dotenv.env['base_url_local'] ?? 'No API Key Found';
+      final prodUrl = dotenv.env['base_url_production'] ?? 'No API Key Found';
 
       final response = await http.post(
-        Uri.parse("$prod_url/quiz/risk-update/$userId/$riskCategory"),
+        Uri.parse("$prodUrl/quiz/risk-update/$userId/$riskCategory"),
       );
 
       print("Risk Submission Status Code: ${response.statusCode}");

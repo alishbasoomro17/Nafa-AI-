@@ -51,13 +51,13 @@ class _FundViewPageState extends State<FundViewPage> {
   Future<void> get_prediction() async {
     setState(() => isPredicting = true);
     try {
-      final local_url = dotenv.env['base_url_local'] ?? 'No API Key Found';
-      final prod_url = dotenv.env['base_url_production'] ?? 'No API Key Found';
+      final localUrl = dotenv.env['base_url_local'] ?? 'No API Key Found';
+      final prodUrl = dotenv.env['base_url_production'] ?? 'No API Key Found';
 
       final client = http.Client();
       final response = await client
           .post(
-            Uri.parse("$prod_url/predictor/analyze"),
+            Uri.parse("$prodUrl/predictor/analyze"),
             headers: {"Content-Type": "application/json"},
             body: jsonEncode({"symbol": widget.ticker}),
           )
@@ -78,10 +78,10 @@ class _FundViewPageState extends State<FundViewPage> {
 
   Future<void> fetchStock() async {
     try {
-      final local_url = dotenv.env['base_url_local'] ?? 'No API Key Found';
-      final prod_url = dotenv.env['base_url_production'] ?? 'No API Key Found';
+      final localUrl = dotenv.env['base_url_local'] ?? 'No API Key Found';
+      final prodUrl = dotenv.env['base_url_production'] ?? 'No API Key Found';
       final response = await http.get(
-        Uri.parse("$prod_url/stocks/${widget.ticker}"),
+        Uri.parse("$prodUrl/stocks/${widget.ticker}"),
       );
       print("urlresponse: $response");
 
@@ -120,7 +120,7 @@ class _FundViewPageState extends State<FundViewPage> {
         ),
       );
     }
-    Widget _buildReasoningTile(String desc) {
+    Widget buildReasoningTile(String desc) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 20),
         child: Row(
@@ -153,7 +153,7 @@ class _FundViewPageState extends State<FundViewPage> {
       );
     }
 
-    Widget _buildSectionCard({
+    Widget buildSectionCard({
       required String title,
       required List<Widget> children,
     }) {
@@ -274,11 +274,11 @@ class _FundViewPageState extends State<FundViewPage> {
                       // 🟪 INSIGHTS CARD
                       if (predictionData != null &&
                           predictionData!['reasoning'] is List)
-                        _buildSectionCard(
+                        buildSectionCard(
                           title: "Insights",
                           children: List<Widget>.from(
                             (predictionData!['reasoning'] as List).map((item) {
-                              return _buildReasoningTile(item.toString());
+                              return buildReasoningTile(item.toString());
                             }),
                           ),
                         )
@@ -288,11 +288,11 @@ class _FundViewPageState extends State<FundViewPage> {
                       // 🟥 RISKS CARD
                       if (predictionData != null &&
                           predictionData!['risks'] is List)
-                        _buildSectionCard(
+                        buildSectionCard(
                           title: "Future Risks",
                           children: List<Widget>.from(
                             (predictionData!['risks'] as List).map((item) {
-                              return _buildReasoningTile(item.toString());
+                              return buildReasoningTile(item.toString());
                             }),
                           ),
                         ),
@@ -674,7 +674,7 @@ class _FundViewPageState extends State<FundViewPage> {
             ),
             const SizedBox(height: 6),
             const Text(
-              "Select a platform to invest in ${_kDarkBackground != null ? '' : ''}this stock",
+              "Select a platform to invest in ${''}this stock",
               style: TextStyle(color: Colors.white54, fontSize: 13),
             ),
             const SizedBox(height: 20),
@@ -793,9 +793,7 @@ class _FundViewPageState extends State<FundViewPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const TextStyle(color: Colors.white38) == null
-                ? const SizedBox()
-                : const Text("Cancel", style: TextStyle(color: Colors.white38)),
+            child: const Text("Cancel", style: TextStyle(color: Colors.white38)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -1276,7 +1274,7 @@ class _PerformanceGraphState extends State<PerformanceGraph>
                     style: const TextStyle(color: Colors.white38, fontSize: 10))),
               ]),
             );
-          }).toList(),
+          }),
         ],
       ),
     );

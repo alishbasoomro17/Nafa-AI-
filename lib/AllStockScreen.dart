@@ -171,7 +171,7 @@ Color _riskColor(String? risk) {
                           // Sector dropdown
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: selectedSector,
+                              initialValue: selectedSector,
                               dropdownColor: const Color(0xFF1A1A2E),
                               style: const TextStyle(color: Colors.white, fontSize: 12),
                               decoration: InputDecoration(
@@ -196,7 +196,7 @@ Color _riskColor(String? risk) {
                           // Shariah dropdown
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: selectedShariah,
+                              initialValue: selectedShariah,
                               dropdownColor: const Color(0xFF1A1A2E),
                               style: const TextStyle(color: Colors.white, fontSize: 12),
                               decoration: InputDecoration(

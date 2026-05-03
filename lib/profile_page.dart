@@ -131,7 +131,7 @@ class _ProfilePageState extends State<ProfilePage> {
         },
       );
 
-      print('Update response: ${response}');
+      print('Update response: $response');
 
       if (response.statusCode == 200) {
         // Update SharedPreferences with new values
@@ -376,7 +376,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           label: 'Risk Category',
                           child: _isEditing
                               ? DropdownButtonFormField<String>(
-                                  value: selectedRisk,
+                                  initialValue: selectedRisk,
                                   dropdownColor: Colors.grey[900],
                                   style: const TextStyle(color: Colors.white),
                                   decoration: _inputDecoration('Select risk level'),
@@ -456,8 +456,10 @@ class _ProfilePageState extends State<ProfilePage> {
       
       if (response.statusCode == 200) {
         await prefs.clear();
-        if (mounted) Navigator.pushReplacement(
+        if (mounted) {
+          Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (_) => const SignupScreen()));
+        }
       } else {
         _showErrorSnack('Failed to delete account');
       }

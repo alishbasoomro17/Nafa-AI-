@@ -83,11 +83,11 @@ String? _validatePassword(String? value) {
       print(userData);
 
       try {
-        final local_url = dotenv.env['base_url_local'] ?? 'No API Key Found';
-        final prod_url = dotenv.env['base_url_production'] ?? 'No API Key Found';
-        print("Base URL: $prod_url");
+        final localUrl = dotenv.env['base_url_local'] ?? 'No API Key Found';
+        final prodUrl = dotenv.env['base_url_production'] ?? 'No API Key Found';
+        print("Base URL: $prodUrl");
         final response = await http.post(
-          Uri.parse("$prod_url/users/register-user"), // Your backend URL
+          Uri.parse("$prodUrl/users/register-user"), // Your backend URL
           headers: {"Content-Type": "application/json"},
           body: jsonEncode(userData),
         );
@@ -220,31 +220,31 @@ String? _validatePassword(String? value) {
                         ),
                       ),
 
-                      const SizedBox(height: 24),
+                      // const SizedBox(height: 24),
 
-                      // Or divider and social icons
-                      Row(
-                        children: [
-                          Expanded(child: Divider(color: Colors.white24)),
-                          const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 12),
-                            child: Text("Or",
-                                style: TextStyle(
-                                    color: Colors.white54, fontSize: 13)),
-                          ),
-                          Expanded(child: Divider(color: Colors.white24)),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _socialIcon(Icons.g_mobiledata_rounded),
-                          const SizedBox(width: 20),
-                          _socialIcon(Icons.apple),
-                          const SizedBox(width: 20),
-                        ],
-                      ),
+                      // // Or divider and social icons
+                      // Row(
+                      //   children: [
+                      //     Expanded(child: Divider(color: Colors.white24)),
+                      //     const Padding(
+                      //       padding: EdgeInsets.symmetric(horizontal: 12),
+                      //       child: Text("Or",
+                      //           style: TextStyle(
+                      //               color: Colors.white54, fontSize: 13)),
+                      //     ),
+                      //     Expanded(child: Divider(color: Colors.white24)),
+                      //   ],
+                      // ),
+                      // const SizedBox(height: 24),
+                      // Row(
+                      //   mainAxisAlignment: MainAxisAlignment.center,
+                      //   children: [
+                      //     _socialIcon(Icons.g_mobiledata_rounded),
+                      //     const SizedBox(width: 20),
+                      //     _socialIcon(Icons.apple),
+                      //     const SizedBox(width: 20),
+                      //   ],
+                      // ),
                       const SizedBox(height: 30),
 
                       Center(

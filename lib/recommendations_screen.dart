@@ -38,12 +38,12 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     _showRiskDialog();
 
     try {
-        final local_url = dotenv.env['base_url_local'] ?? 'No API Key Found';
-        final prod_url=dotenv.env['base_url_production'] ?? 'No API Key Found';
+        final localUrl = dotenv.env['base_url_local'] ?? 'No API Key Found';
+        final prodUrl=dotenv.env['base_url_production'] ?? 'No API Key Found';
 
 
       final response = await http.post(
-        Uri.parse('$prod_url/ai/recommend-by-risk'),
+        Uri.parse('$prodUrl/ai/recommend-by-risk'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'risk': widget.riskCategory}),
       );

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:op/hello.dart';
-import 'package:op/recommendations_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';  
+import 'package:op/home_page.dart';
 
 void main() async {
   await dotenv.load(); 
@@ -34,7 +33,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const OnboardingFlow(),
+      home: const HomePage(),
     );
   }
 }
