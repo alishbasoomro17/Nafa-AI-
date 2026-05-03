@@ -152,7 +152,7 @@ class _FinancialCoursePageState extends State<FinancialCoursePage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          "Created by Nafa AI",
+          "Created by Shehnila Narejo",
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 5),
