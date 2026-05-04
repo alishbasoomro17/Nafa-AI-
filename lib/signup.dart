@@ -68,66 +68,151 @@ String? _validatePassword(String? value) {
   if (!RegExp(r'[!@#\$%^&*(),.?":{}|<>]').hasMatch(value)) return 'Password must contain at least one special character';
   return null;
 }
-
-  void _handleSignup() async {
-    _playButtonSound(); // Play sound
-
-    if (_formKey.currentState!.validate()) {
-      // Prepare data to send
-      final userData = {
-        "username": _fullNameController.text,
-        "email": _emailController.text,
-        "password": _passwordController.text,
-        "role":"user"
-      };
-      print(userData);
-
-      try {
-        final local_url = dotenv.env['base_url_local'] ?? 'No API Key Found';
-        final prod_url = dotenv.env['base_url_production'] ?? 'No API Key Found';
-        print("Base URL: $prod_url");
-        final response = await http.post(
-          Uri.parse("$prod_url/users/register-user"), // Your backend URL
-          headers: {"Content-Type": "application/json"},
-          body: jsonEncode(userData),
-        );
-
-        if (response.statusCode == 201) {
-          print("Success: ${response.body}");
-          final data = jsonDecode(response.body);
-
-          final token = data["access_token"];
-
-          // Save token
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString("token", token);
-
-          print("TOKEN SAVED: $token");
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Signup Successful!")),
-          );
-
-          Future.delayed(const Duration(seconds: 1), () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const QuizScreen()),
-            );
-          });
-        } else {
-          print("Error: ${response.body}");
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Signup Failed: ${response.statusCode}")),
-          );
-        }
-      } catch (e) {
-        print("Exception: $e");
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Network Error: $e")),
-        );
-      }
+/// Parses the backend's { message, statusCode } JSON into a friendly string
+String _parseBackendError(String responseBody, int statusCode) {
+  try {
+    final data = jsonDecode(responseBody);
+    if (data is Map && data['message'] != null) {
+      final msg = data['message'];
+      if (msg is List) return (msg as List).join('\n');
+      if (msg is String && msg.trim().isNotEmpty) return msg.trim();
     }
-  }
+  } catch (_) {}
 
+  // Fallback by status code
+  switch (statusCode) {
+    case 400: return 'Some information you entered is invalid. Please review and try again.';
+    case 409: return 'An account with this email already exists. Try logging in instead.';
+    case 422: return 'Please check your details and try again.';
+    case 500: return 'Our server is having an issue. Please try again in a moment.';
+    default:  return 'Signup failed. Please try again.';
+  }
+}
+
+/// Maps exceptions (network, timeout, etc.) to friendly messages
+String _parseException(Exception e) {
+  final msg = e.toString().toLowerCase();
+  if (msg.contains('timeout'))          return 'Request timed out. Please check your connection and try again.';
+  if (msg.contains('socketexception'))  return 'No internet connection. Please check your network.';
+  if (msg.contains('handshake'))        return 'Secure connection failed. Please try again.';
+  return 'Something went wrong. Please try again.';
+}
+
+/// Red error snackbar — never shows raw code or exception text
+void _showErrorSnackbar(String message) {
+  if (!mounted) return;
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white, size: 18),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(message, style: const TextStyle(color: Colors.white, fontSize: 13)),
+            ),
+          ],
+        ),
+        backgroundColor: const Color(0xFFD32F2F),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(
+          label: 'Dismiss',
+          textColor: Colors.white70,
+          onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+        ),
+      ),
+    );
+}
+
+/// Green success snackbar
+void _showSuccessSnackbar(String message) {
+  if (!mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Row(
+        children: [
+          const Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+          const SizedBox(width: 10),
+          Expanded(child: Text(message, style: const TextStyle(color: Colors.white))),
+        ],
+      ),
+      backgroundColor: const Color(0xFF2E7D32),
+      behavior: SnackBarBehavior.floating,
+      duration: const Duration(seconds: 2),
+    ),
+  );
+}
+
+void _handleSignup() async {
+  _playButtonSound();
+
+  if (!_formKey.currentState!.validate()) return;
+
+  // Show loading indicator
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const Center(
+      child: CircularProgressIndicator(color: Color(0xFF6E4BD8)),
+    ),
+  );
+
+  try {
+    final prodUrl = dotenv.env['base_url_production'] ?? '';
+
+    if (prodUrl.isEmpty) {
+      Navigator.of(context).pop(); // close loader
+      _showErrorSnackbar('App configuration error. Please contact support.');
+      return;
+    }
+
+    final response = await http.post(
+      Uri.parse("$prodUrl/users/register-user"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "username": _fullNameController.text.trim(),
+        "email": _emailController.text.trim(),
+        "password": _passwordController.text,
+        "role": "user",
+      }),
+    ).timeout(
+      const Duration(seconds: 15),
+      onTimeout: () => throw Exception('timeout'),
+    );
+
+    Navigator.of(context).pop(); // close loader
+
+    if (response.statusCode == 201) {
+      final data = jsonDecode(response.body);
+      final token = data["access_token"];
+      final userId = data["user"]?["id"];
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString("token", token);
+      if (userId != null) await prefs.setInt("userId", userId);
+
+      _showSuccessSnackbar('Account created successfully! Welcome 🎉');
+
+      Future.delayed(const Duration(seconds: 1), () {
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const QuizScreen()),
+        );
+      });
+    } else {
+      // Parse friendly message from your backend's JSON response
+      final message = _parseBackendError(response.body, response.statusCode);
+      _showErrorSnackbar(message);
+    }
+  } on Exception catch (e) {
+    if (Navigator.canPop(context)) Navigator.of(context).pop(); // close loader if still open
+    final message = _parseException(e);
+    _showErrorSnackbar(message);
+  }
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -236,15 +321,7 @@ String? _validatePassword(String? value) {
                         ],
                       ),
                       const SizedBox(height: 24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _socialIcon(Icons.g_mobiledata_rounded),
-                          const SizedBox(width: 20),
-                          _socialIcon(Icons.apple),
-                          const SizedBox(width: 20),
-                        ],
-                      ),
+                    
                       const SizedBox(height: 30),
 
                       Center(
@@ -392,15 +469,15 @@ String? _validatePassword(String? value) {
     );
   }
 
-  Widget _socialIcon(IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: const Color(0xFF0D0D0D),
-        border: Border.all(color: Colors.white24),
-      ),
-      child: Icon(icon, color: const Color(0xFFAAF308), size: 24),
-    );
-  }
+  // Widget _socialIcon(IconData icon) {
+  //   return Container(
+  //     padding: const EdgeInsets.all(14),
+  //     decoration: BoxDecoration(
+  //       shape: BoxShape.circle,
+  //       color: const Color(0xFF0D0D0D),
+  //       border: Border.all(color: Colors.white24),
+  //     ),
+  //     child: Icon(icon, color: const Color(0xFFAAF308), size: 24),
+  //   );
+  // }
 }

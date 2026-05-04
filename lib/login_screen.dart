@@ -54,83 +54,153 @@ String? _validatePassword(String? value) {
   if (value == null || value.isEmpty) return 'Password is required';
   if (value.length < 6)  return 'Password must be at least 6 characters';
   if (value.length > 15) return 'Password must be at most 15 characters';
-  if (!RegExp(r'[A-Z]').hasMatch(value)) return ' YourPassword must contain at least one uppercase letter';
+  if (!RegExp(r'[A-Z]').hasMatch(value)) return 'Password must contain at least one uppercase letter';
   if (!RegExp(r'[a-z]').hasMatch(value)) return 'Password must contain at least one lowercase letter';
   if (!RegExp(r'[0-9]').hasMatch(value)) return 'Password must contain at least one number';
   if (!RegExp(r'[!@#\$%^&*(),.?":{}|<>]').hasMatch(value)) return 'Password must contain at least one special character';
   return null;
 }
 
+String _parseBackendError(String body, int statusCode) {
+  try {
+    final data = jsonDecode(body);
+    if (data is Map && data['message'] != null) {
+      final msg = data['message'];
+      if (msg is String && msg.trim().isNotEmpty) return msg.trim();
+      if (msg is List) return (msg as List).join('\n');
+    }
+  } catch (_) {}
 
+  switch (statusCode) {
+    case 400: return 'Some information you entered is invalid. Please review and try again.';
+    case 401: return 'Incorrect email or password. Please try again.';
+    case 403: return 'Your account does not have access. Please contact support.';
+    case 404: return 'No account found with this email. Please sign up first.';
+    case 429: return 'Too many login attempts. Please wait a moment and try again.';
+    case 500: return 'Our server is having an issue. Please try again shortly.';
+    default:  return 'Login failed. Please try again.';
+  }
+}
+
+String _parseException(Exception e) {
+  final msg = e.toString().toLowerCase();
+  if (msg.contains('timeout'))         return 'Request timed out. Please check your connection and try again.';
+  if (msg.contains('socketexception')) return 'No internet connection. Please check your network.';
+  if (msg.contains('handshake'))       return 'Secure connection failed. Please try again.';
+  return 'Something went wrong. Please try again.';
+}
+
+void _showErrorSnackbar(String message) {
+  if (!mounted) return;
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white, size: 18),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(message, style: const TextStyle(color: Colors.white, fontSize: 13)),
+            ),
+          ],
+        ),
+        backgroundColor: const Color(0xFFD32F2F),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(
+          label: 'Dismiss',
+          textColor: Colors.white70,
+          onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+        ),
+      ),
+    );
+}
+
+void _showSuccessSnackbar(String message) {
+  if (!mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Row(
+        children: [
+          const Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+          const SizedBox(width: 10),
+          Expanded(child: Text(message, style: const TextStyle(color: Colors.white))),
+        ],
+      ),
+      backgroundColor: const Color(0xFF2E7D32),
+      behavior: SnackBarBehavior.floating,
+      duration: const Duration(seconds: 2),
+    ),
+  );
+}
   // ----- Login handler -----
- void _handleLogin() async {
-    _playButtonSound();
+void _handleLogin() async {
+  _playButtonSound();
 
-    if (_formKey.currentState!.validate()) {
-      final userData = {
+  if (!_formKey.currentState!.validate()) return;
+
+  // Show loading spinner
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const Center(
+      child: CircularProgressIndicator(color: Color(0xFF6E4BD8)),
+    ),
+  );
+
+  try {
+    final prodUrl = dotenv.env['base_url_production'] ?? '';
+
+    if (prodUrl.isEmpty) {
+      if (Navigator.canPop(context)) Navigator.of(context).pop();
+      _showErrorSnackbar('App configuration error. Please contact support.');
+      return;
+    }
+
+    final response = await http.post(
+      Uri.parse("$prodUrl/users/login"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
         "email": _emailController.text.trim(),
         "password": _passwordController.text,
-      };
+      }),
+    ).timeout(
+      const Duration(seconds: 15),
+      onTimeout: () => throw Exception('timeout'),
+    );
 
-      try {
-        final prodUrl = dotenv.env['base_url_production'] ?? '';
+    if (Navigator.canPop(context)) Navigator.of(context).pop(); // dismiss spinner
 
-        final response = await http.post(
-          Uri.parse("$prodUrl/users/login"),
-          headers: {"Content-Type": "application/json"},
-          body: jsonEncode(userData),
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final data = jsonDecode(response.body);
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString("token",        data["access_token"] ?? '');
+      await prefs.setString("username",     data["username"]     ?? '');
+      await prefs.setString("role",         data["role"]         ?? '');
+      await prefs.setString("riskCategory", data["riskCategory"] ?? '');
+      if (data["id"] != null) await prefs.setInt("userId", data["id"]);
+
+      _showSuccessSnackbar('Welcome back, ${data["username"] ?? ""}!');
+
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomePage()),
         );
-
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          final data = jsonDecode(response.body);
-
-          final token = data["access_token"];
-          final username = data["username"] ?? "";
-          final role = data["role"] ?? "";
-          final riskCategory = data["riskCategory"] ?? "";
-
-          // ── Save to SharedPreferences ──
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString("token", token);
-          await prefs.setString("username", username);
-          await prefs.setString("role", role);
-          await prefs.setString("riskCategory", riskCategory);
-
-          print("TOKEN SAVED: $token");
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Login Successful!"),
-              backgroundColor: Color(0xFF6E4BD8),
-            ),
-          );
-
-          Future.delayed(const Duration(milliseconds: 800), () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const HomePage()),
-            );
-          });
-        } else {
-          final error = jsonDecode(response.body);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(error["message"] ?? "Login failed"),
-              backgroundColor: Colors.redAccent,
-            ),
-          );
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Network Error: $e"),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
-      }
+      });
+    } else {
+      final message = _parseBackendError(response.body, response.statusCode);
+      _showErrorSnackbar(message);
     }
+  } on Exception catch (e) {
+    if (Navigator.canPop(context)) Navigator.of(context).pop(); // dismiss spinner if still open
+    _showErrorSnackbar(_parseException(e));
   }
-  @override
+}
+ @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
@@ -257,16 +327,7 @@ String? _validatePassword(String? value) {
                       ),
                       const SizedBox(height: 24),
 
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _socialIcon(Icons.g_mobiledata_rounded),
-                          const SizedBox(width: 20),
-                          _socialIcon(Icons.apple),
-                          const SizedBox(width: 20),
-                          _socialIcon(Icons.facebook),
-                        ],
-                      ),
+                      
 
                       const SizedBox(height: 30),
 
@@ -418,15 +479,5 @@ String? _validatePassword(String? value) {
     );
   }
 
-  Widget _socialIcon(IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: const Color(0xFF0D0D0D),
-        border: Border.all(color: Colors.white24),
-      ),
-      child: Icon(icon, color: const Color(0xFFAAF308), size: 24),
-    );
-  }
+
 }

@@ -970,7 +970,6 @@ class InsightCard extends StatelessWidget {
   }
 }
 
-
 class PerformanceGraph extends StatefulWidget {
   final String stockName;
   final String symbol;
@@ -989,19 +988,19 @@ class PerformanceGraph extends StatefulWidget {
 
 class _PerformanceGraphState extends State<PerformanceGraph>
     with SingleTickerProviderStateMixin {
-
   bool isLoading = true;
   String? errorMessage;
   List<Map<String, dynamic>> history = [];
   Map<String, dynamic>? stats;
   String selectedRange = '3mo';
+  bool _isDbFallback = false;
   late AnimationController _animController;
 
   final List<Map<String, String>> ranges = [
-    {'label': '1M',  'value': '1mo'},
-    {'label': '3M',  'value': '3mo'},
-    {'label': '6M',  'value': '6mo'},
-    {'label': '1Y',  'value': '1y'},
+    {'label': '1M', 'value': '1mo'},
+    {'label': '3M', 'value': '3mo'},
+    {'label': '6M', 'value': '6mo'},
+    {'label': '1Y', 'value': '1y'},
   ];
 
   @override
@@ -1019,34 +1018,74 @@ class _PerformanceGraphState extends State<PerformanceGraph>
     _animController.dispose();
     super.dispose();
   }
+Future<void> _fetchHistory() async {
+  setState(() {
+    isLoading = true;
+    errorMessage = null;
+  });
 
-  Future<void> _fetchHistory() async {
-    setState(() { isLoading = true; errorMessage = null; });
+  try {
+    final prodUrl = dotenv.env['base_url_production'] ?? '';
+    final response = await http.get(
+      Uri.parse('$prodUrl/stocks/history/${widget.symbol}?range=$selectedRange'),
+    );
 
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setState(() {
+        history = List<Map<String, dynamic>>.from(data['history']);
+        stats = Map<String, dynamic>.from(data['stats']);
+        isLoading = false;
+        _isDbFallback = false;
+      });
+      _animController.forward(from: 0);
+    } else {
+      // Yahoo returned 404 → silently fall back to DB
+      print('Yahoo returned ${response.statusCode} for ${widget.symbol}, falling back to DB...');
+      await _fetchFromDb(prodUrl);  // ← THIS is the fix
+    }
+  } catch (e) {
+    print("Network error: $e");
     try {
       final prodUrl = dotenv.env['base_url_production'] ?? '';
-      final response = await http.get(
-        Uri.parse('$prodUrl/stocks/history/${widget.symbol}?range=$selectedRange'),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          history      = List<Map<String, dynamic>>.from(data['history']);
-          stats        = Map<String, dynamic>.from(data['stats']);
-          isLoading    = false;
-        });
-        _animController.forward(from: 0);
-      } else {
-        setState(() {
-          errorMessage = 'Failed to load history (${response.statusCode})';
-          isLoading    = false;
-        });
-      }
-    } catch (e) {
+      await _fetchFromDb(prodUrl);
+    } catch (e2) {
       setState(() {
-        errorMessage = 'Error: $e';
-        isLoading    = false;
+        errorMessage = 'No data available for ${widget.symbol}';
+        isLoading = false;
+      });
+    }
+  }
+}
+  Future<void> _fetchFromDb(String prodUrl) async {
+    final response = await http.get(
+      Uri.parse('$prodUrl/stocks/db-history/${widget.symbol}'),
+    );
+
+    if (response.statusCode == 200) {
+      final raw = jsonDecode(response.body);
+      final List<Map<String, dynamic>> dbHistory =
+          List<Map<String, dynamic>>.from(raw['history']);
+
+      if (dbHistory.isEmpty) {
+        setState(() {
+          errorMessage = 'No historical data available for ${widget.symbol}';
+          isLoading = false;
+        });
+        return;
+      }
+
+      setState(() {
+        history = dbHistory;
+        stats = Map<String, dynamic>.from(raw['stats']);
+        isLoading = false;
+        _isDbFallback = true;
+      });
+      _animController.forward(from: 0);
+    } else {
+      setState(() {
+        errorMessage = 'No data available for ${widget.symbol}';
+        isLoading = false;
       });
     }
   }
@@ -1062,132 +1101,205 @@ class _PerformanceGraphState extends State<PerformanceGraph>
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.stockName,
-                style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
-            Text(widget.symbol,
-                style: const TextStyle(color: Colors.white54, fontSize: 11)),
+            Text(
+              widget.stockName,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              widget.symbol,
+              style: const TextStyle(color: Colors.white54, fontSize: 11),
+            ),
           ],
         ),
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator(color: _kAccentSuccess))
+          ? const Center(
+              child: CircularProgressIndicator(color: _kAccentSuccess),
+            )
           : errorMessage != null
-              ? Center(child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.wifi_off, color: Colors.white38, size: 48),
-                    const SizedBox(height: 12),
-                    Text(errorMessage!, style: const TextStyle(color: Colors.red)),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _fetchHistory,
-                      style: ElevatedButton.styleFrom(backgroundColor: _kPrimaryColor),
-                      child: const Text('Retry'),
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.wifi_off, color: Colors.white38, size: 48),
+                  const SizedBox(height: 12),
+                  Text(
+                    errorMessage!,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _fetchHistory,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _kPrimaryColor,
                     ),
-                  ],
-                ))
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            )
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Stats row ──
+                  Row(
                     children: [
-
-                      // ── Stats row ──
-                      Row(children: [
-                        _statCard('Current',  'PKR ${stats!["lastPrice"]}',  _kAccentSuccess),
-                        const SizedBox(width: 10),
-                        _statCard('High',     'PKR ${stats!["highest"]}',    Colors.orangeAccent),
-                        const SizedBox(width: 10),
-                        _statCard('Low',      'PKR ${stats!["lowest"]}',     Colors.redAccent),
-                      ]),
-
-                      const SizedBox(height: 12),
-
-                      // ── Change banner ──
-                      _changeBanner(),
-
-                      const SizedBox(height: 20),
-
-                      // ── Range selector ──
-                      Row(
-                        children: ranges.map((r) {
-                          final isSelected = selectedRange == r['value'];
-                          return GestureDetector(
-                            onTap: () {
-                              setState(() => selectedRange = r['value']!);
-                              _fetchHistory();
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.only(right: 8),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: isSelected ? _kPrimaryColor : Colors.white10,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(r['label']!,
-                                  style: TextStyle(
-                                    color: isSelected ? Colors.white : Colors.white54,
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                    fontSize: 13,
-                                  )),
-                            ),
-                          );
-                        }).toList(),
+                      _statCard(
+                        'Current',
+                        'PKR ${stats!["lastPrice"]}',
+                        _kAccentSuccess,
                       ),
+                      const SizedBox(width: 10),
+                      _statCard(
+                        'High',
+                        'PKR ${stats!["highest"]}',
+                        Colors.orangeAccent,
+                      ),
+                      const SizedBox(width: 10),
+                      _statCard(
+                        'Low',
+                        'PKR ${stats!["lowest"]}',
+                        Colors.redAccent,
+                      ),
+                    ],
+                  ),
 
-                      const SizedBox(height: 20),
+                  const SizedBox(height: 12),
 
-                      // ── Chart ──
-                      Container(
-                        height: 280,
-                        padding: const EdgeInsets.fromLTRB(8, 20, 8, 8),
-                        decoration: BoxDecoration(
-                          color: _kCardBackground,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.white10),
-                        ),
-                        child: AnimatedBuilder(
-                          animation: _animController,
-                          builder: (_, __) => CustomPaint(
-                            size: Size.infinite,
-                            painter: RealChartPainter(
-                              history:        history,
-                              animationValue: _animController.value,
-                              lineColor:      (stats!['changePct'] as num) >= 0
-                                              ? _kAccentSuccess
-                                              : Colors.redAccent,
+                  // ── Change banner ──
+                  _changeBanner(),
+
+                  const SizedBox(height: 20),
+
+                  // ── Range selector ──
+                  Row(
+                    children: ranges.map((r) {
+                      final isSelected = selectedRange == r['value'];
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() => selectedRange = r['value']!);
+                          _fetchHistory();
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected ? _kPrimaryColor : Colors.white10,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            r['label']!,
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : Colors.white54,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              fontSize: 13,
                             ),
                           ),
                         ),
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // ── OHLCV Table ──
-                      _sectionTitle('Recent Price Data'),
-                      const SizedBox(height: 10),
-                      _ohlcvTable(),
-
-                      const SizedBox(height: 20),
-
-                      // ── Analysis ──
-                      _sectionTitle('Analysis'),
-                      const SizedBox(height: 10),
-                      _analysisCard(),
-
-                      const SizedBox(height: 30),
-                    ],
+                      );
+                    }).toList(),
                   ),
-                ),
+
+                  // ── Add this right after the range selector Row ──
+                  if (_isDbFallback) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.orangeAccent.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: Colors.orangeAccent.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.info_outline,
+                            color: Colors.orangeAccent,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          const Expanded(
+                            child: Text(
+                              'Historical data from Yahoo Finance unavailable. Showing today\'s data from our database.',
+                              style: TextStyle(
+                                color: Colors.orangeAccent,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 20),
+
+                  // ── Chart ──
+                  Container(
+                    height: 280,
+                    padding: const EdgeInsets.fromLTRB(8, 20, 8, 8),
+                    decoration: BoxDecoration(
+                      color: _kCardBackground,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white10),
+                    ),
+                    child: AnimatedBuilder(
+                      animation: _animController,
+                      builder: (_, __) => CustomPaint(
+                        size: Size.infinite,
+                        painter: RealChartPainter(
+                          history: history,
+                          animationValue: _animController.value,
+                          lineColor: (stats!['changePct'] as num) >= 0
+                              ? _kAccentSuccess
+                              : Colors.redAccent,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // ── OHLCV Table ──
+                  _sectionTitle('Recent Price Data'),
+                  const SizedBox(height: 10),
+                  _ohlcvTable(),
+
+                  const SizedBox(height: 20),
+
+                  // ── Analysis ──
+                  _sectionTitle('Analysis'),
+                  const SizedBox(height: 10),
+                  _analysisCard(),
+
+                  const SizedBox(height: 30),
+                ],
+              ),
+            ),
     );
   }
 
   Widget _changeBanner() {
-    final pct      = (stats!['changePct'] as num).toDouble();
-    final change   = (stats!['change'] as num).toDouble();
-    final isUp     = pct >= 0;
-    final color    = isUp ? _kAccentSuccess : Colors.redAccent;
-    final icon     = isUp ? Icons.trending_up : Icons.trending_down;
+    final pct = (stats!['changePct'] as num).toDouble();
+    final change = (stats!['change'] as num).toDouble();
+    final isUp = pct >= 0;
+    final color = isUp ? _kAccentSuccess : Colors.redAccent;
+    final icon = isUp ? Icons.trending_up : Icons.trending_down;
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -1196,20 +1308,29 @@ class _PerformanceGraphState extends State<PerformanceGraph>
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: color.withOpacity(0.3)),
       ),
-      child: Row(children: [
-        Icon(icon, color: color, size: 28),
-        const SizedBox(width: 12),
-        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(
-            '${isUp ? '+' : ''}${pct.toStringAsFixed(2)}%  (${isUp ? '+' : ''}PKR ${change.toStringAsFixed(2)})',
-            style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 28),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${isUp ? '+' : ''}${pct.toStringAsFixed(2)}%  (${isUp ? '+' : ''}PKR ${change.toStringAsFixed(2)})',
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              Text(
+                'Over ${stats!['totalDays']} trading days  •  $selectedRange',
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
+              ),
+            ],
           ),
-          Text(
-            'Over ${stats!['totalDays']} trading days  •  $selectedRange',
-            style: const TextStyle(color: Colors.white54, fontSize: 12),
-          ),
-        ]),
-      ]),
+        ],
+      ),
     );
   }
 
@@ -1222,23 +1343,44 @@ class _PerformanceGraphState extends State<PerformanceGraph>
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: color.withOpacity(0.25)),
         ),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(label, style: TextStyle(color: color.withOpacity(0.7), fontSize: 10)),
-          const SizedBox(height: 4),
-          Text(value, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold)),
-        ]),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(color: color.withOpacity(0.7), fontSize: 10),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _sectionTitle(String title) {
-    return Text(title,
-        style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold));
+    return Text(
+      title,
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 15,
+        fontWeight: FontWeight.bold,
+      ),
+    );
   }
 
   Widget _ohlcvTable() {
     // Show last 7 days
-    final recent = history.length > 7 ? history.sublist(history.length - 7) : history;
+    final recent = history.length > 7
+        ? history.sublist(history.length - 7)
+        : history;
     return Container(
       decoration: BoxDecoration(
         color: _kCardBackground,
@@ -1250,31 +1392,65 @@ class _PerformanceGraphState extends State<PerformanceGraph>
           // Header
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(children: [
-              _tableHeader('Date',   flex: 3),
-              _tableHeader('Open',   flex: 2),
-              _tableHeader('Close',  flex: 2),
-              _tableHeader('Vol',    flex: 2),
-            ]),
+            child: Row(
+              children: [
+                _tableHeader('Date', flex: 3),
+                _tableHeader('Open', flex: 2),
+                _tableHeader('Close', flex: 2),
+                _tableHeader('Vol', flex: 2),
+              ],
+            ),
           ),
           const Divider(color: Colors.white10, height: 1),
           ...recent.reversed.map((d) {
             final isUp = (d['close'] ?? 0) >= (d['open'] ?? 0);
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-              child: Row(children: [
-                Expanded(flex: 3, child: Text(d['date'] ?? '-',
-                    style: const TextStyle(color: Colors.white54, fontSize: 11))),
-                Expanded(flex: 2, child: Text('${d['open'] ?? '-'}',
-                    style: const TextStyle(color: Colors.white70, fontSize: 11))),
-                Expanded(flex: 2, child: Text('${d['close'] ?? '-'}',
-                    style: TextStyle(
-                      color: isUp ? _kAccentSuccess : Colors.redAccent,
-                      fontSize: 11, fontWeight: FontWeight.bold,
-                    ))),
-                Expanded(flex: 2, child: Text(_formatVol(d['volume']),
-                    style: const TextStyle(color: Colors.white38, fontSize: 10))),
-              ]),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      d['date'] ?? '-',
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      '${d['open'] ?? '-'}',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      '${d['close'] ?? '-'}',
+                      style: TextStyle(
+                        color: isUp ? _kAccentSuccess : Colors.redAccent,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      _formatVol(d['volume']),
+                      style: const TextStyle(
+                        color: Colors.white38,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             );
           }).toList(),
         ],
@@ -1285,13 +1461,19 @@ class _PerformanceGraphState extends State<PerformanceGraph>
   Widget _tableHeader(String text, {int flex = 1}) {
     return Expanded(
       flex: flex,
-      child: Text(text,
-          style: const TextStyle(color: Colors.white38, fontSize: 10, fontWeight: FontWeight.bold)),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white38,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 
   Widget _analysisCard() {
-    final pct    = (stats!['changePct'] as num).toDouble();
+    final pct = (stats!['changePct'] as num).toDouble();
     final prices = history.map((h) => (h['close'] as num).toDouble()).toList();
 
     // Simple moving average (last 7 days)
@@ -1301,14 +1483,19 @@ class _PerformanceGraphState extends State<PerformanceGraph>
 
     // Volatility (std deviation)
     final mean = prices.reduce((a, b) => a + b) / prices.length;
-    final variance = prices.map((p) => pow(p - mean, 2)).reduce((a, b) => a + b) / prices.length;
+    final variance =
+        prices.map((p) => pow(p - mean, 2)).reduce((a, b) => a + b) /
+        prices.length;
     final stdDev = sqrt(variance);
     final volatilityPct = ((stdDev / mean) * 100).toStringAsFixed(1);
 
-    final trend = pct > 5 ? 'Strong Uptrend 📈'
-                : pct > 0 ? 'Mild Uptrend 📈'
-                : pct > -5 ? 'Mild Downtrend 📉'
-                : 'Strong Downtrend 📉';
+    final trend = pct > 5
+        ? 'Strong Uptrend 📈'
+        : pct > 0
+        ? 'Mild Uptrend 📈'
+        : pct > -5
+        ? 'Mild Downtrend 📉'
+        : 'Strong Downtrend 📉';
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1317,14 +1504,22 @@ class _PerformanceGraphState extends State<PerformanceGraph>
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Colors.white10),
       ),
-      child: Column(children: [
-        _analysisRow('Trend',          trend),
-        _analysisRow('7-Day SMA',      'PKR ${sma7.toStringAsFixed(2)}'),
-        _analysisRow('Volatility',     '$volatilityPct%'),
-        _analysisRow('Period Change',  '${pct >= 0 ? '+' : ''}${pct.toStringAsFixed(2)}%'),
-        _analysisRow('Trading Days',   '${stats!['totalDays']}'),
-        _analysisRow('Price Range',    'PKR ${stats!['lowest']} – ${stats!['highest']}'),
-      ]),
+      child: Column(
+        children: [
+          _analysisRow('Trend', trend),
+          _analysisRow('7-Day SMA', 'PKR ${sma7.toStringAsFixed(2)}'),
+          _analysisRow('Volatility', '$volatilityPct%'),
+          _analysisRow(
+            'Period Change',
+            '${pct >= 0 ? '+' : ''}${pct.toStringAsFixed(2)}%',
+          ),
+          _analysisRow('Trading Days', '${stats!['totalDays']}'),
+          _analysisRow(
+            'Price Range',
+            'PKR ${stats!['lowest']} – ${stats!['highest']}',
+          ),
+        ],
+      ),
     );
   }
 
@@ -1334,8 +1529,18 @@ class _PerformanceGraphState extends State<PerformanceGraph>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Colors.white54, fontSize: 13)),
-          Text(value, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white54, fontSize: 13),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
@@ -1372,14 +1577,20 @@ class RealChartPainter extends CustomPainter {
 
     final minPrice = prices.reduce(min);
     final maxPrice = prices.reduce(max);
-    final range    = maxPrice - minPrice;
-    final padded   = range == 0 ? 1.0 : range;
+    final range = maxPrice - minPrice;
+    final padded = range == 0 ? 1.0 : range;
 
-    final int pointCount = (prices.length * animationValue).ceil().clamp(1, prices.length);
+    final int pointCount = (prices.length * animationValue).ceil().clamp(
+      1,
+      prices.length,
+    );
 
     Offset getPoint(int i) {
       final x = i * size.width / (prices.length - 1);
-      final y = size.height - ((prices[i] - minPrice) / padded) * size.height * 0.85 - size.height * 0.05;
+      final y =
+          size.height -
+          ((prices[i] - minPrice) / padded) * size.height * 0.85 -
+          size.height * 0.05;
       return Offset(x, y);
     }
 
@@ -1391,35 +1602,43 @@ class RealChartPainter extends CustomPainter {
     fillPath.lineTo(getPoint(pointCount - 1).dx, size.height);
     fillPath.close();
 
-    canvas.drawPath(fillPath, Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [lineColor.withOpacity(0.35), lineColor.withOpacity(0.0)],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height)));
+    canvas.drawPath(
+      fillPath,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [lineColor.withOpacity(0.35), lineColor.withOpacity(0.0)],
+        ).createShader(Rect.fromLTWH(0, 0, size.width, size.height)),
+    );
 
     // ── Line ──
     final linePath = Path()..moveTo(getPoint(0).dx, getPoint(0).dy);
     for (int i = 1; i < pointCount; i++) {
       linePath.lineTo(getPoint(i).dx, getPoint(i).dy);
     }
-    canvas.drawPath(linePath, Paint()
-      ..color = lineColor
-      ..strokeWidth = 2.0
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round);
+    canvas.drawPath(
+      linePath,
+      Paint()
+        ..color = lineColor
+        ..strokeWidth = 2.0
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round,
+    );
 
     // ── Y labels ──
     for (int i = 0; i <= 3; i++) {
       final val = minPrice + (padded * i / 3);
-      final y   = size.height - (i / 3 * size.height * 0.85) - size.height * 0.05;
+      final y = size.height - (i / 3 * size.height * 0.85) - size.height * 0.05;
       TextPainter(
-        text: TextSpan(
-          text: val.toStringAsFixed(0),
-          style: const TextStyle(color: Colors.white24, fontSize: 9),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout()..paint(canvas, Offset(4, y - 8));
+          text: TextSpan(
+            text: val.toStringAsFixed(0),
+            style: const TextStyle(color: Colors.white24, fontSize: 9),
+          ),
+          textDirection: TextDirection.ltr,
+        )
+        ..layout()
+        ..paint(canvas, Offset(4, y - 8));
     }
   }
 
