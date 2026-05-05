@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:op/recommendations_screen.dart';
+import 'package:op/small_bussiness_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:audioplayers/audioplayers.dart'; // Added for sound
 import 'dart:convert';
@@ -433,6 +434,16 @@ final Map<int, Map<String, dynamic>> scoring = {
           "questionText": currentQuestion["questionText"],
           "quizAnswer": selectedOption,
         });
+        if (currentQuestion["questionId"] == 1 &&
+            selectedOption == "Nothing or I run short") {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const SmallBusinessScreen(),
+            ),
+          );
+          return;
+        }
 
         if (currentIndex < questions.length - 1) {
           setState(() {

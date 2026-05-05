@@ -392,67 +392,214 @@ class _FundViewPageState extends State<FundViewPage> {
     );
   }
 
-  Widget _fundHeader() {
-    return Stack(
-      alignment: Alignment.centerRight, // Align the tag to the right
+Widget _fundHeader() {
+  final shariahStatus = stockData!["shariah_status"] ?? "Unknown";
+  final isCompliant = shariahStatus.toLowerCase().contains("compliant") &&
+      !shariahStatus.toLowerCase().contains("non");
+  final symbol = stockData!["symbol"] ?? widget.ticker;
+  final name   = stockData!["name"]   ?? widget.ticker;
+  final sector = stockData!["sector"] ?? "";
+
+  // Consistent color per symbol
+  final colors = [
+    const Color(0xFF6E4BD8), const Color(0xFF2196F3), const Color(0xFF00BCD4),
+    const Color(0xFF009688), const Color(0xFF4CAF50), const Color(0xFFFF9800),
+    const Color(0xFFE91E63), const Color(0xFF9C27B0),
+  ];
+  final symbolColor = colors[symbol.codeUnitAt(0) % colors.length];
+
+  return Container(
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(24),
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          symbolColor.withOpacity(0.25),
+          symbolColor.withOpacity(0.05),
+          const Color(0xFF1A1A1A),
+        ],
+      ),
+      border: Border.all(color: symbolColor.withOpacity(0.3)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: _kCardBackground,
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: _kPrimaryColor.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.account_balance_wallet,
-                  color: _kPrimaryColor,
+        // ── Top row: avatar + badges ──
+        Row(
+          children: [
+            // Letter avatar
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: symbolColor,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: symbolColor.withOpacity(0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  symbol.length >= 2 ? symbol.substring(0, 2) : symbol,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 18,
+                    letterSpacing: 1,
+                  ),
                 ),
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      stockData!["name"],
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
+            ),
+
+            const SizedBox(width: 14),
+
+            // Name + symbol
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                      height: 1.2,
                     ),
-                    const SizedBox(height: 4),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    symbol,
+                    style: TextStyle(
+                      color: symbolColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Shariah badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: isCompliant
+                    ? const Color(0xFFAAF308).withOpacity(0.15)
+                    : Colors.redAccent.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isCompliant
+                      ? const Color(0xFFAAF308).withOpacity(0.5)
+                      : Colors.redAccent.withOpacity(0.5),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    isCompliant ? Icons.verified_rounded : Icons.cancel_rounded,
+                    color: isCompliant ? const Color(0xFFAAF308) : Colors.redAccent,
+                    size: 12,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    isCompliant ? "Halal" : "Non-Halal",
+                    style: TextStyle(
+                      color: isCompliant ? const Color(0xFFAAF308) : Colors.redAccent,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 16),
+        const Divider(color: Colors.white10, height: 1),
+        const SizedBox(height: 14),
+
+        // ── Bottom row: sector + current price ──
+        Row(
+          children: [
+            // Sector chip
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.white12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.category_outlined, color: Colors.white38, size: 12),
+                  const SizedBox(width: 5),
+                  Text(
+                    sector,
+                    style: const TextStyle(color: Colors.white54, fontSize: 11),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+
+            const Spacer(),
+
+            // Current price
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  "PKR ${stockData!["current_price"] ?? '-'}",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 20,
+                  ),
+                ),
+                Row(
+                  children: [
+                    Icon(
+                      (stockData!["change"] ?? 0) >= 0
+                          ? Icons.arrow_drop_up_rounded
+                          : Icons.arrow_drop_down_rounded,
+                      color: (stockData!["change"] ?? 0) >= 0
+                          ? const Color(0xFFAAF308)
+                          : Colors.redAccent,
+                      size: 18,
+                    ),
                     Text(
-                      "${stockData!["sector"]} • ${stockData!["shariah_status"]}",
-                      style: const TextStyle(
-                        color: Colors.white60,
+                      "${stockData!["change"] ?? 0}%",
+                      style: TextStyle(
+                        color: (stockData!["change"] ?? 0) >= 0
+                            ? const Color(0xFFAAF308)
+                            : Colors.redAccent,
                         fontSize: 12,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
-              ),
-              // Added a spacer so the text doesn't overlap the tag
-              const SizedBox(width: 80),
-            ],
-          ),
+              ],
+            ),
+          ],
         ),
-        // This is your new gradient widget pinned to the right
-        // Positioned(
-        //   right: 0,
-        //   child: _stockRecommendationTag(),
-        // ),
       ],
-    );
-  }
+    ),
+  );
+}
 
   // ---------------- ACTION BUTTONS ----------------
   Widget _actionRow(BuildContext context) {
@@ -548,25 +695,226 @@ class _FundViewPageState extends State<FundViewPage> {
   }
 
   // ---------------- MARKET STATS ----------------
-  Widget _marketStats() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _kCardBackground,
-        borderRadius: BorderRadius.circular(16),
+ Widget _marketStats() {
+  final change = (stockData!["change"] ?? 0).toDouble();
+  final isUp   = change >= 0;
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      // ── Section label ──
+      Padding(
+        padding: const EdgeInsets.only(left: 4, bottom: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 3, height: 16,
+              decoration: BoxDecoration(
+                color: _kAccentSuccess,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              "MARKET STATS",
+              style: TextStyle(
+                color: Colors.white38,
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.8,
+              ),
+            ),
+          ],
+        ),
       ),
-      child: Column(
+
+      // ── Main price spotlight ──
+      Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              isUp
+                  ? _kAccentSuccess.withOpacity(0.12)
+                  : Colors.redAccent.withOpacity(0.12),
+              const Color(0xFF1A1A1A),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isUp
+                ? _kAccentSuccess.withOpacity(0.25)
+                : Colors.redAccent.withOpacity(0.25),
+          ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text("Current Price",
+                      style: TextStyle(color: Colors.white38, fontSize: 11)),
+                  const SizedBox(height: 4),
+                  Text(
+                    "PKR ${stockData!["current_price"] ?? '-'}",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: isUp
+                    ? _kAccentSuccess.withOpacity(0.15)
+                    : Colors.redAccent.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: isUp
+                      ? _kAccentSuccess.withOpacity(0.4)
+                      : Colors.redAccent.withOpacity(0.4),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    isUp ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+                    color: isUp ? _kAccentSuccess : Colors.redAccent,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    "${isUp ? '+' : ''}${change.toStringAsFixed(2)}%",
+                    style: TextStyle(
+                      color: isUp ? _kAccentSuccess : Colors.redAccent,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+
+      const SizedBox(height: 12),
+
+      // ── Open / High / Low grid ──
+      Row(
         children: [
-          _metricRow("Open Price", stockData!["open"]),
-          _metricRow("High Price", stockData!["high"]),
-          _metricRow("Low Price", stockData!["low"]),
-          _metricRow("Current Price", stockData!["current_price"]),
-          _metricRow("Beta", stockData!["beta"]),
+          _miniStatCard("OPEN",  stockData!["open"],  const Color(0xFF6E4BD8)),
+          const SizedBox(width: 8),
+          _miniStatCard("HIGH",  stockData!["high"],  const Color(0xFFAAF308)),
+          const SizedBox(width: 8),
+          _miniStatCard("LOW",   stockData!["low"],   Colors.redAccent),
         ],
       ),
-    );
-  }
 
+      const SizedBox(height: 12),
+
+      // ── Beta card ──
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.04),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white10),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6E4BD8).withOpacity(0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.bolt_rounded, color: Color(0xFF6E4BD8), size: 18),
+            ),
+            const SizedBox(width: 14),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("Beta",
+                    style: TextStyle(color: Colors.white38, fontSize: 11)),
+                const SizedBox(height: 2),
+                Text(
+                  "${stockData!["beta"] ?? '-'}",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            // Beta interpretation badge
+            Builder(builder: (_) {
+              final beta = (stockData!["beta"] ?? 1).toDouble();
+              final label = beta < 1 ? "Low Volatility" : beta > 1 ? "High Volatility" : "Market Neutral";
+              final color = beta < 1 ? _kAccentSuccess : beta > 1 ? Colors.orangeAccent : Colors.white54;
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: color.withOpacity(0.3)),
+                ),
+                child: Text(label,
+                    style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+              );
+            }),
+          ],
+        ),
+      ),
+    ],
+  );
+}
+
+Widget _miniStatCard(String label, dynamic value, Color color) {
+  return Expanded(
+    child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.07),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: color.withOpacity(0.7),
+              fontSize: 9,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.4,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value?.toString() ?? '-',
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+              fontSize: 15,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
   // ---------------- RISK ----------------
   Widget _riskSection() {
     final risk = stockData!["risk_level"]?.toString() ?? '';

@@ -105,9 +105,7 @@ class _HomePageState extends State<HomePage> {
             Image.asset('assets/logo1.png', height: 32, errorBuilder: (_, __, ___) =>
                 const Icon(Icons.show_chart, color: greenMain, size: 28)),
             const SizedBox(width: 10),
-            const Text("Nafa AI",
-                style: TextStyle(
-                    color: greenMain, fontWeight: FontWeight.w800, fontSize: 20)),
+           
           ],
         ),
         actions: [
