@@ -422,23 +422,11 @@ Widget _bottomNavBar(
       }
     },
     items: const [
-      BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined),
-          activeIcon: Icon(Icons.home),
-          label: "Home"),
-      BottomNavigationBarItem(
-          icon: Icon(Icons.star_outline),
-          activeIcon: Icon(Icons.star),
-          label: "Recommendation"),
-      BottomNavigationBarItem(
-          icon: Icon(Icons.auto_stories_outlined),
-          activeIcon: Icon(Icons.auto_stories),
-          label: "Aaghi"),
-      BottomNavigationBarItem(
-          icon: Icon(Icons.person_outline),
-          activeIcon: Icon(Icons.person),
-          label: "Profile"),
-    ],
+        BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: "Home"),
+        BottomNavigationBarItem(icon: Icon(Icons.auto_graph_rounded), label: "Recommendations"),
+        BottomNavigationBarItem(icon: Icon(Icons.school_outlined), label: "Aaghi"),
+        BottomNavigationBarItem(icon: Icon(Icons.person_outline_rounded), label: "Profile"),
+      ],
   );
 }
 

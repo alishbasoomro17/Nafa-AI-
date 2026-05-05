@@ -1,8 +1,11 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:video_player/video_player.dart';
 
 const Color greenMain = Color(0xFFAAF308);
 const Color purpleAccent = Color(0xFF6E4BD8);
+const Color darkCard = Color(0xFF1A1A1A);
 
 class FinancialCoursePage extends StatefulWidget {
   const FinancialCoursePage({super.key});
@@ -12,8 +15,16 @@ class FinancialCoursePage extends StatefulWidget {
 }
 
 class _FinancialCoursePageState extends State<FinancialCoursePage> {
-  int selectedTab = 0;
+  int selectedTab = 1;
   final AudioPlayer _audioPlayer = AudioPlayer();
+
+  final List<Map<String, String>> lessons = [
+    {"title": "What is the Stock Market?", "asset": "assets/lesson1.mp4"},
+    {"title": "Types of Stocks & Shares", "asset": "assets/lesson2.mp4"},
+    {"title": "How Prices Move", "asset": "assets/lesson3.mp4"},
+    {"title": "Risk & Return Basics", "asset": "assets/lesson4.mp4"},
+    {"title": "How to Start Investing", "asset": "assets/lesson5.mp4"},
+  ];
 
   void _playClickSound() async {
     try {
@@ -21,71 +32,552 @@ class _FinancialCoursePageState extends State<FinancialCoursePage> {
     } catch (_) {}
   }
 
-  @override
-  void dispose() {
-    _audioPlayer.dispose();
-    super.dispose();
+  void _openLesson(BuildContext context, int index) {
+    _playClickSound();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => LessonPlayerPage(
+          lessonNumber: index + 1,
+          title: lessons[index]["title"]!,
+          assetPath: lessons[index]["asset"]!,
+          allLessons: lessons,
+        ),
+      ),
+    );
   }
-
-  final List<Map<String, dynamic>> lessons = [
-    {
-      "title": "What is the Stock Market?",
-      "duration": "6 min",
-      "desc": "Learn the basics of what a stock market is and why it exists.",
-    },
-    {
-      "title": "What are Stocks & Shares?",
-      "duration": "5 min",
-      "desc": "Understand ownership, shares, and how companies raise capital.",
-    },
-    {
-      "title": "How Stock Prices Move",
-      "duration": "7 min",
-      "desc": "Discover supply, demand, and what causes price changes.",
-    },
-    {
-      "title": "Types of Investors",
-      "duration": "5 min",
-      "desc": "Retail vs institutional investors and their roles.",
-    },
-    {
-      "title": "Risk & Return",
-      "duration": "6 min",
-      "desc": "The core trade-off every investor must understand.",
-    },
-    {
-      "title": "Building a Portfolio",
-      "duration": "8 min",
-      "desc": "Diversification, asset classes, and balancing risk.",
-    },
-    {
-      "title": "Getting Started",
-      "duration": "7 min",
-      "desc": "Your first steps to investing safely and smartly.",
-    },
-  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0F),
-      body: CustomScrollView(
-        slivers: [
-          _buildSliverAppBar(context),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+      backgroundColor: Colors.black,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.15),
+            shape: BoxShape.circle,
+          ),
+          child: const BackButton(color: Colors.white),
+        ),
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: RadialGradient(
+            center: Alignment(-0.8, -0.6),
+            radius: 1.5,
+            colors: [Color(0xFF121212), Colors.black],
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 100),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _title(),
+              const SizedBox(height: 8),
+              _meta(),
+              const SizedBox(height: 24),
+              _instructor(),
+              const SizedBox(height: 32),
+              _tabs(),
+              const SizedBox(height: 24),
+              _tabView(context),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _title() {
+    return const Text(
+      "Stock 101\nBeginner Course",
+      style: TextStyle(
+        color: Colors.white,
+        fontSize: 32,
+        height: 1.1,
+        fontWeight: FontWeight.bold,
+      ),
+    );
+  }
+
+  Widget _meta() {
+    return Row(
+      children: [
+        const Icon(Icons.bolt, color: greenMain, size: 16),
+        const SizedBox(width: 4),
+        const Text(
+          "Beginner Friendly • 5 Lessons",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _instructor() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white.withOpacity(0.2)),
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: purpleAccent,
+                child: Icon(Icons.auto_awesome, color: Colors.white, size: 18),
+              ),
+              SizedBox(width: 12),
+              Text(
+                "Created by Nafa AI",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _tabs() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          _tabItem("Overview", 0),
+          _tabItem("Lessons", 1),
+        ],
+      ),
+    );
+  }
+
+  Widget _tabItem(String title, int index) {
+    final bool active = selectedTab == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          _playClickSound();
+          setState(() => selectedTab = index);
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: active ? Colors.white.withOpacity(0.15) : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: active ? greenMain : Colors.white,
+              fontSize: 14,
+              fontWeight: active ? FontWeight.bold : FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _tabView(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 400),
+      child: selectedTab == 0 ? _aboutTab() : _lessonsTab(context),
+    );
+  }
+
+  Widget _aboutTab() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: darkCard,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
+      ),
+      child: const Text(
+        "This course introduces the basic concepts of the stock market. You will learn key terms and definitions such as stocks, shares, market types, risk, and investment fundamentals.",
+        style: TextStyle(
+          color: Colors.white,
+          height: 1.6,
+          fontSize: 15,
+        ),
+      ),
+    );
+  }
+
+  Widget _lessonsTab(BuildContext context) {
+    return Column(
+      children: lessons.asMap().entries.map((entry) {
+        return _lessonCard(context, entry.key, entry.value);
+      }).toList(),
+    );
+  }
+
+  Widget _lessonCard(
+      BuildContext context, int index, Map<String, String> lesson) {
+    final int number = index + 1;
+    return GestureDetector(
+      onTap: () => _openLesson(context, index),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: darkCard,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: purpleAccent.withOpacity(0.4),
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    purpleAccent.withOpacity(0.5),
+                    purpleAccent.withOpacity(0.2)
+                  ],
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.play_arrow_rounded,
+                  color: greenMain, size: 28),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _courseHeader(),
-                  const SizedBox(height: 24),
-                  _tabRow(),
-                  const SizedBox(height: 20),
-                  _tabContent(),
-                  const SizedBox(height: 60),
+                  Text(
+                    "MODULE 0$number",
+                    style: const TextStyle(
+                        color: purpleAccent,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    lesson["title"]!,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ],
               ),
+            ),
+            const Icon(Icons.chevron_right_rounded,
+                color: Colors.white, size: 28),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// LESSON PLAYER PAGE
+// ─────────────────────────────────────────────
+
+class LessonPlayerPage extends StatefulWidget {
+  final int lessonNumber;
+  final String title;
+  final String assetPath;
+  final List<Map<String, String>> allLessons;
+
+  const LessonPlayerPage({
+    super.key,
+    required this.lessonNumber,
+    required this.title,
+    required this.assetPath,
+    required this.allLessons,
+  });
+
+  @override
+  State<LessonPlayerPage> createState() => _LessonPlayerPageState();
+}
+
+class _LessonPlayerPageState extends State<LessonPlayerPage> {
+  late VideoPlayerController _controller;
+  bool _isInitialized = false;
+  bool _showControls = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _initVideo(widget.assetPath);
+  }
+
+  void _initVideo(String path) {
+    _controller = VideoPlayerController.asset(path)
+      ..initialize().then((_) {
+        if (mounted) {
+          setState(() {
+            _isInitialized = true;
+          });
+          _controller.play();
+        }
+      });
+    _controller.addListener(() {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  String _formatDuration(Duration d) {
+    return "${d.inMinutes.remainder(60).toString().padLeft(2, '0')}:${d.inSeconds.remainder(60).toString().padLeft(2, '0')}";
+  }
+
+  void _toggleControls() {
+    setState(() => _showControls = !_showControls);
+  }
+
+  void _navigateToLesson(BuildContext context, int index) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => LessonPlayerPage(
+          lessonNumber: index + 1,
+          title: widget.allLessons[index]["title"]!,
+          assetPath: widget.allLessons[index]["asset"]!,
+          allLessons: widget.allLessons,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.15),
+            shape: BoxShape.circle,
+          ),
+          child: const BackButton(color: Colors.white),
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "MODULE 0${widget.lessonNumber}",
+              style: const TextStyle(
+                  color: purpleAccent,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.2),
+            ),
+            Text(
+              widget.title,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: RadialGradient(
+            center: Alignment(-0.8, -0.6),
+            radius: 1.5,
+            colors: [Color(0xFF121212), Colors.black],
+          ),
+        ),
+        child: Column(
+          children: [
+            // ── VIDEO PLAYER ──────────────────────────────
+            _videoSection(),
+
+            // ── LESSON LIST ──────────────────────────────
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Up Next",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ...widget.allLessons.asMap().entries.map((entry) {
+                      final isActive =
+                          entry.key + 1 == widget.lessonNumber;
+                      return _lessonCard(context, entry.key, entry.value,
+                          isActive);
+                    }),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _videoSection() {
+    return GestureDetector(
+      onTap: _toggleControls,
+      child: Container(
+        margin: const EdgeInsets.only(top: 100, left: 16, right: 16, bottom: 4),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: purpleAccent.withOpacity(0.25),
+              blurRadius: 24,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: AspectRatio(
+            aspectRatio: 16 / 9,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Video or loading background
+                if (_isInitialized)
+                  VideoPlayer(_controller)
+                else
+                  Container(color: const Color(0xFF0D0D0D)),
+
+                // Loading indicator
+                if (!_isInitialized)
+                  const CircularProgressIndicator(
+                    color: greenMain,
+                    strokeWidth: 2.5,
+                  ),
+
+                // Overlay controls
+                if (_isInitialized && _showControls)
+                  _videoOverlay(),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _videoOverlay() {
+    final position = _controller.value.position;
+    final duration = _controller.value.duration;
+    final progress =
+        duration.inMilliseconds > 0 ? position.inMilliseconds / duration.inMilliseconds : 0.0;
+
+    return Container(
+      color: Colors.black.withOpacity(0.45),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const SizedBox(),
+          // Play/pause button
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _controller.value.isPlaying
+                    ? _controller.pause()
+                    : _controller.play();
+              });
+            },
+            child: Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white30, width: 1.5),
+              ),
+              child: Icon(
+                _controller.value.isPlaying
+                    ? Icons.pause_rounded
+                    : Icons.play_arrow_rounded,
+                color: greenMain,
+                size: 40,
+              ),
+            ),
+          ),
+          // Bottom progress bar
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: Column(
+              children: [
+                // Custom slim progress bar
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: progress.clamp(0.0, 1.0),
+                    backgroundColor: Colors.white24,
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(greenMain),
+                    minHeight: 4,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      _formatDuration(position),
+                      style: const TextStyle(
+                          color: Colors.white70, fontSize: 11),
+                    ),
+                    Text(
+                      _formatDuration(duration),
+                      style: const TextStyle(
+                          color: Colors.white70, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
@@ -93,503 +585,98 @@ class _FinancialCoursePageState extends State<FinancialCoursePage> {
     );
   }
 
-  /* ---------------- APP BAR ---------------- */
-
-  Widget _buildSliverAppBar(BuildContext context) {
-    return SliverAppBar(
-      expandedHeight: 200,
-      pinned: true,
-      backgroundColor: const Color(0xFF0A0A0F),
-      leading: GestureDetector(
-        onTap: () {
-          _playClickSound();
-          Navigator.pop(context);
-        },
-        child: Container(
-          margin: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white.withOpacity(0.1),
+  Widget _lessonCard(BuildContext context, int index,
+      Map<String, String> lesson, bool isActive) {
+    final int number = index + 1;
+    return GestureDetector(
+      onTap: isActive ? null : () => _navigateToLesson(context, index),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isActive
+              ? purpleAccent.withOpacity(0.15)
+              : darkCard,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isActive
+                ? purpleAccent
+                : purpleAccent.withOpacity(0.4),
+            width: isActive ? 2 : 1.5,
           ),
-          child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
         ),
-      ),
-      flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                purpleAccent.withOpacity(0.8),
-                const Color(0xFF0A0A0F),
-              ],
-            ),
-          ),
-          child: const Padding(
-            padding: EdgeInsets.fromLTRB(20, 90, 20, 20),
-            child: Align(
-              alignment: Alignment.bottomLeft,
-              child: Text(
-                "Stock 101\nBeginner Course",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: isActive
+                      ? [purpleAccent, purpleAccent.withOpacity(0.6)]
+                      : [
+                          purpleAccent.withOpacity(0.5),
+                          purpleAccent.withOpacity(0.2)
+                        ],
                 ),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isActive
+                    ? Icons.pause_rounded
+                    : Icons.play_arrow_rounded,
+                color: greenMain,
+                size: 28,
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /* ---------------- HEADER ---------------- */
-
-  Widget _courseHeader() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          "Created by Shehnila Narejo",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 5),
-        Text(
-          "Certified Financial Educator",
-          style: TextStyle(color: Colors.white.withOpacity(0.4)),
-        ),
-      ],
-    );
-  }
-
-  /* ---------------- TABS ---------------- */
-
-  Widget _tabRow() {
-    final tabs = ["About", "Lessons"];
-
-    return Row(
-      children: List.generate(tabs.length, (i) {
-        final active = selectedTab == i;
-
-        return GestureDetector(
-          onTap: () {
-            _playClickSound();
-            setState(() => selectedTab = i);
-          },
-          child: Container(
-            margin: const EdgeInsets.only(right: 10),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            decoration: BoxDecoration(
-              color: active ? purpleAccent : Colors.white10,
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: Text(
-              tabs[i],
-              style: TextStyle(
-                color: active ? Colors.white : Colors.white54,
-              ),
-            ),
-          ),
-        );
-      }),
-    );
-  }
-
-  Widget _tabContent() {
-    return selectedTab == 0 ? _aboutTab() : _lessonsTab();
-  }
-
-  /* ---------------- ABOUT TAB (FIXED) ---------------- */
-
-  Widget _aboutTab() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white10,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: const Text(
-        "This course introduces stock market basics in a simple way.\n\n"
-        "You will learn how stocks work, how prices move, risk vs return, "
-        "and how to start investing safely.",
-        style: TextStyle(color: Colors.white70, height: 1.6),
-      ),
-    );
-  }
-
-  /* ---------------- LESSONS ---------------- */
-
-  Widget _lessonsTab() {
-    return Column(
-      children: List.generate(lessons.length, (index) {
-        final lesson = lessons[index];
-
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white10,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            children: [
-              CircleAvatar(
-                backgroundColor: purpleAccent,
-                child: Text("${index + 1}"),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      lesson["title"],
-                      style: const TextStyle(color: Colors.white),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "MODULE 0$number",
+                    style: TextStyle(
+                      color: isActive ? greenMain : purpleAccent,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
                     ),
-                    Text(
-                      lesson["desc"],
-                      style: TextStyle(color: Colors.white54, fontSize: 12),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    lesson["title"]!,
+                    style: TextStyle(
+                      color: isActive ? Colors.white : Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
                     ),
-                  ],
+                  ),
+                ],
+              ),
+            ),
+            if (isActive)
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: greenMain.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: greenMain.withOpacity(0.4)),
                 ),
-              ),
-              Text(
-                lesson["duration"],
-                style: const TextStyle(color: greenMain),
-              ),
-            ],
-          ),
-        );
-      }),
+                child: const Text(
+                  "Playing",
+                  style: TextStyle(
+                      color: greenMain,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800),
+                ),
+              )
+            else
+              const Icon(Icons.chevron_right_rounded,
+                  color: Colors.white, size: 28),
+          ],
+        ),
+      ),
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import 'package:flutter/material.dart';
-// import 'package:audioplayers/audioplayers.dart';
-
-// const Color greenMain = Color(0xFFAAF308);
-// const Color purpleAccent = Color(0xFF6E4BD8);
-
-// class FinancialCoursePage extends StatefulWidget {
-//   const FinancialCoursePage({super.key});
-
-//   @override
-//   State<FinancialCoursePage> createState() => _FinancialCoursePageState();
-// }
-
-// class _FinancialCoursePageState extends State<FinancialCoursePage> {
-//   int selectedTab = 1; // 0 = About, 1 = Lessons, 2 = Reviews
-//   final AudioPlayer _audioPlayer = AudioPlayer();
-
-//   final TextEditingController _reviewController = TextEditingController();
-//   final List<String> _reviews = [
-//     "Very helpful for beginners.",
-//   ];
-
-//   void _playClickSound() async {
-//     try {
-//       await _audioPlayer.play(AssetSource('success.mp3'));
-//     } catch (_) {}
-//   }
-
-//   void _addReview() {
-//     final reviewText = _reviewController.text.trim();
-//     if (reviewText.isNotEmpty) {
-//       setState(() {
-//         _reviews.add(reviewText);
-//         _reviewController.clear();
-//       });
-//       _playClickSound();
-//     }
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor: Colors.black,
-//       appBar: AppBar(
-//         backgroundColor: Colors.black,
-//         elevation: 0,
-//         leading: const BackButton(color: Colors.white),
-//       ),
-//       body: Stack(
-//         children: [
-//           Padding(
-//             padding: const EdgeInsets.only(bottom: 70), // Space for input
-//             child: SingleChildScrollView(
-//               padding: const EdgeInsets.all(16),
-//               child: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   _badge(),
-//                   const SizedBox(height: 12),
-//                   _title(),
-//                   const SizedBox(height: 6),
-//                   _meta(),
-//                   const SizedBox(height: 14),
-//                   _instructor(),
-//                   const SizedBox(height: 24),
-//                   _tabs(),
-//                   const SizedBox(height: 16),
-//                   _tabView(),
-//                   const SizedBox(height: 80), // Extra padding to prevent overlap
-//                 ],
-//               ),
-//             ),
-//           ),
-
-//           // Bottom input field only in Reviews tab
-//           if (selectedTab == 2)
-//             Align(
-//               alignment: Alignment.bottomCenter,
-//               child: Container(
-//                 padding:
-//                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-//                 decoration: BoxDecoration(
-//                   color: Colors.white12,
-//                   border: const Border(
-//                     top: BorderSide(color: Colors.white24),
-//                   ),
-//                 ),
-//                 child: Row(
-//                   children: [
-//                     const CircleAvatar(
-//                       backgroundColor: purpleAccent,
-//                       child: Icon(Icons.person, color: Colors.white),
-//                     ),
-//                     const SizedBox(width: 12),
-//                     Expanded(
-//                       child: TextField(
-//                         controller: _reviewController,
-//                         style: const TextStyle(color: Colors.white),
-//                         decoration: const InputDecoration(
-//                           hintText: "Write a review...",
-//                           hintStyle: TextStyle(color: Colors.white54),
-//                           border: InputBorder.none,
-//                         ),
-//                       ),
-//                     ),
-//                     IconButton(
-//                       icon: const Icon(Icons.send, color: greenMain),
-//                       onPressed: _addReview,
-//                     ),
-//                   ],
-//                 ),
-//               ),
-//             ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   /* ---------------- HEADER ---------------- */
-
-//   Widget _badge() {
-//     return Container(
-//       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-//       decoration: BoxDecoration(
-//         borderRadius: BorderRadius.circular(30),
-//         gradient: const LinearGradient(
-//           colors: [purpleAccent, Colors.deepPurple],
-//         ),
-//       ),
-//     );
-//   }
-
-//   Widget _title() {
-//     return const Text(
-//       "Stock 101 Beginner Course",
-//       style: TextStyle(
-//         color: Colors.white,
-//         fontSize: 22,
-//         fontWeight: FontWeight.bold,
-//       ),
-//     );
-//   }
-
-//   Widget _meta() {
-//     return const Text(
-//       "Beginner Friendly",
-//       style: TextStyle(color: Colors.white60),
-//     );
-//   }
-
-//   Widget _instructor() {
-//     return const Row(
-//       children: [
-//         CircleAvatar(
-//           backgroundColor: purpleAccent,
-//           child: Icon(Icons.school, color: Colors.white),
-//         ),
-//         SizedBox(width: 10),
-//         Text(
-//           "Created by Nafa AI",
-//           style: TextStyle(color: Colors.white),
-//         ),
-//       ],
-//     );
-//   }
-
-//   /* ---------------- TABS ---------------- */
-
-//   Widget _tabs() {
-//     return Row(
-//       children: [
-//         _tabItem("What you'll learn", 0),
-//         _tabItem("Course content", 1),
-//         _tabItem("Reviews", 2),
-//       ],
-//     );
-//   }
-
-//   Widget _tabItem(String title, int index) {
-//     final bool active = selectedTab == index;
-
-//     return Expanded(
-//       child: GestureDetector(
-//         onTap: () {
-//           _playClickSound();
-//           setState(() => selectedTab = index);
-//         },
-//         child: Container(
-//           padding: const EdgeInsets.symmetric(vertical: 10),
-//           decoration: BoxDecoration(
-//             border: Border(
-//               bottom: BorderSide(
-//                 color: active ? greenMain : Colors.transparent,
-//                 width: 2,
-//               ),
-//             ),
-//           ),
-//           child: Text(
-//             title,
-//             textAlign: TextAlign.center,
-//             style: TextStyle(
-//               color: active ? Colors.white : Colors.white54,
-//               fontWeight: active ? FontWeight.bold : FontWeight.normal,
-//             ),
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-
-//   /* ---------------- TAB CONTENT ---------------- */
-
-//   Widget _tabView() {
-//     if (selectedTab == 0) return _aboutTab();
-//     if (selectedTab == 1) return _lessonsTab();
-//     return _reviewsTab();
-//   }
-
-//   /* ---------------- ABOUT ---------------- */
-
-//   Widget _aboutTab() {
-//     return Container(
-//       padding: const EdgeInsets.all(16),
-//       decoration: BoxDecoration(
-//         color: Colors.white10,
-//         borderRadius: BorderRadius.circular(16),
-//       ),
-//       child: const Text(
-//         "This course introduces the basic concepts of the stock market. Youwill learn key terms and definitions such as stocks, shares, market types, risk, returns, and investment fundamentals. It explains how the stock market works and how prices move, using simple theory and examples. The course is designed only to build understanding and does not require any prior financial knowledge. ",
-//         style: TextStyle(color: Colors.white70, height: 1.4),
-//       ),
-//     );
-//   }
-
-//   /* ---------------- LESSONS ---------------- */
-
-//   Widget _lessonsTab() {
-//     return Column(
-//       children: List.generate(7, (index) {
-//         return _lessonCard("Lesson ${index + 1}");
-//       }),
-//     );
-//   }
-
-//   Widget _lessonCard(String title) {
-//     return GestureDetector(
-//       onTap: _playClickSound,
-//       child: Container(
-//         margin: const EdgeInsets.only(bottom: 12),
-//         padding: const EdgeInsets.all(14),
-//         decoration: BoxDecoration(
-//           color: Colors.white12,
-//           borderRadius: BorderRadius.circular(16),
-//         ),
-//         child: Row(
-//           children: [
-//             const Icon(Icons.play_circle_outline,
-//                 color: purpleAccent, size: 28),
-//             const SizedBox(width: 12),
-//             Expanded(
-//               child: Text(
-//                 title,
-//                 style: const TextStyle(color: Colors.white),
-//               ),
-//             ),
-//             const Text("--:--", style: TextStyle(color: Colors.white38)),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-
-//   /* ---------------- REVIEWS ---------------- */
-
-//   Widget _reviewsTab() {
-//     return Column(
-//       children: _reviews.map((review) {
-//         return Container(
-//           margin: const EdgeInsets.only(bottom: 12),
-//           padding: const EdgeInsets.all(14),
-//           decoration: BoxDecoration(
-//             color: Colors.white10,
-//             borderRadius: BorderRadius.circular(16),
-//           ),
-//           child: Row(
-//             crossAxisAlignment: CrossAxisAlignment.start,
-//             children: [
-//               const CircleAvatar(
-//                 backgroundColor: purpleAccent,
-//                 child: Icon(Icons.person, color: Colors.white, size: 16),
-//               ),
-//               const SizedBox(width: 8),
-//               Expanded(
-//                 child: Text(
-//                   review,
-//                   style: const TextStyle(color: Colors.white70),
-//                 ),
-//               ),
-//             ],
-//           ),
-//         );
-//       }).toList(),
-//     );
-//   }
-// }

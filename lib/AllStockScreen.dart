@@ -14,6 +14,7 @@ class AllStocksScreen extends StatefulWidget {
   @override
   State<AllStocksScreen> createState() => _AllStocksScreenState();
 }
+
 class _LogoWithFallback extends StatefulWidget {
   final List<String> urls;
   final String symbol;
@@ -87,9 +88,7 @@ class _LogoWithFallbackState extends State<_LogoWithFallback> {
       decoration: BoxDecoration(
         color: const Color(0xFF6E4BD8).withOpacity(0.2),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: const Color(0xFF6E4BD8).withOpacity(0.4),
-        ),
+        border: Border.all(color: const Color(0xFF6E4BD8).withOpacity(0.4)),
       ),
       child: Center(
         child: Text(
@@ -122,88 +121,85 @@ class _AllStocksScreenState extends State<AllStocksScreen> {
   }
 
   // ADD this method inside _AllStocksScreenState
- Widget _stockLogo(String symbol, String companyName, {double size = 42}) {
-  // Build list of URLs to try in order
-  final attempts = [
-    // 1. Logo.dev — works for international companies listed on PSX
-    'https://img.logo.dev/${_guessDomain(companyName)}?token=pk_free&size=64&format=png',
-    // 2. Clearbit — another logo source
-    'https://logo.clearbit.com/${_guessDomain(companyName)}',
-    // 3. Google favicon service — works for many domains
-    'https://www.google.com/s2/favicons?domain=${_guessDomain(companyName)}&sz=64',
-  ];
+  Widget _stockLogo(String symbol, String companyName, {double size = 42}) {
+    // Build list of URLs to try in order
+    final attempts = [
+      // 1. Logo.dev — works for international companies listed on PSX
+      'https://img.logo.dev/${_guessDomain(companyName)}?token=pk_free&size=64&format=png',
+      // 2. Clearbit — another logo source
+      'https://logo.clearbit.com/${_guessDomain(companyName)}',
+      // 3. Google favicon service — works for many domains
+      'https://www.google.com/s2/favicons?domain=${_guessDomain(companyName)}&sz=64',
+    ];
 
-  return _LogoWithFallback(
-    urls: attempts,
-    symbol: symbol,
-    size: size,
-  );
-}
-
-String _guessDomain(String companyName) {
-  final cleaned = companyName
-      .toLowerCase()
-      .replaceAll(RegExp(r'\(.*?\)'), '')
-      .replaceAll(RegExp(r'[^a-z0-9 ]'), '')
-      .trim();
-
-  // Map known PSX companies to their actual domains
-  const domainMap = {
-    'habib bank': 'hbl.com',
-    'national bank': 'nbp.com.pk',
-    'meezan bank': 'meezanbank.com',
-    'united bank': 'ubldigital.com',
-    'mcb bank': 'mcb.com.pk',
-    'allied bank': 'abl.com',
-    'bank alfalah': 'bankalfalah.com',
-    'engro': 'engro.com',
-    'lucky cement': 'luckycement.com',
-    'nestle': 'nestle.com.pk',
-    'unilever': 'unilever.com',
-    'honda atlas': 'hondaatlas.com.pk',
-    'indus motor': 'toyota.com.pk',
-    'pakistan petroleum': 'ppl.com.pk',
-    'oil gas development': 'ogdcl.com',
-    'pakistan state oil': 'psopk.com',
-    'hub power': 'hubpower.com',
-    'fauji fertilizer': 'ffc.com.pk',
-    'fatima fertilizer': 'fatimafertilizer.com',
-    'systems limited': 'systemsltd.com',
-    'netsol': 'netsol.com',
-    'pakistan tobacco': 'paktobacco.com',
-    'colgate': 'colgate.com',
-    'glaxosmithkline': 'gsk.com',
-    'abbott': 'abbott.com',
-    'searle': 'searlecompany.com',
-    'bestway cement': 'bestway.com.pk',
-    'maple leaf': 'mapleleafcement.com',
-    'fauji cement': 'faujicement.com.pk',
-    'kohat cement': 'kohatcement.com.pk',
-    'attock cement': 'attockcement.com.pk',
-    'siemens': 'siemens.com.pk',
-    'pakistan cables': 'pakistancables.com',
-    'interloop': 'interloop.com.pk',
-    'airlink': 'airlink.com.pk',
-    'tpl': 'tpl.com.pk',
-    'packages': 'packages.com.pk',
-    'k electric': 'ke.com.pk',
-    'sui northern': 'sngpl.com.pk',
-    'sui southern': 'ssgc.com.pk',
-    'ptcl': 'ptcl.com.pk',
-    'hum network': 'humtv.com',
-    'pakistan stock exchange': 'psx.com.pk',
-    'psx': 'psx.com.pk',
-  };
-
-  // Check domain map first
-  for (final entry in domainMap.entries) {
-    if (cleaned.contains(entry.key)) return entry.value;
+    return _LogoWithFallback(urls: attempts, symbol: symbol, size: size);
   }
 
-  // Fallback: guess from first word
-  final firstWord = cleaned.split(' ').first;
-  return '$firstWord.com.pk';
-}
+  String _guessDomain(String companyName) {
+    final cleaned = companyName
+        .toLowerCase()
+        .replaceAll(RegExp(r'\(.*?\)'), '')
+        .replaceAll(RegExp(r'[^a-z0-9 ]'), '')
+        .trim();
+
+    // Map known PSX companies to their actual domains
+    const domainMap = {
+      'habib bank': 'hbl.com',
+      'national bank': 'nbp.com.pk',
+      'meezan bank': 'meezanbank.com',
+      'united bank': 'ubldigital.com',
+      'mcb bank': 'mcb.com.pk',
+      'allied bank': 'abl.com',
+      'bank alfalah': 'bankalfalah.com',
+      'engro': 'engro.com',
+      'lucky cement': 'luckycement.com',
+      'nestle': 'nestle.com.pk',
+      'unilever': 'unilever.com',
+      'honda atlas': 'hondaatlas.com.pk',
+      'indus motor': 'toyota.com.pk',
+      'pakistan petroleum': 'ppl.com.pk',
+      'oil gas development': 'ogdcl.com',
+      'pakistan state oil': 'psopk.com',
+      'hub power': 'hubpower.com',
+      'fauji fertilizer': 'ffc.com.pk',
+      'fatima fertilizer': 'fatimafertilizer.com',
+      'systems limited': 'systemsltd.com',
+      'netsol': 'netsol.com',
+      'pakistan tobacco': 'paktobacco.com',
+      'colgate': 'colgate.com',
+      'glaxosmithkline': 'gsk.com',
+      'abbott': 'abbott.com',
+      'searle': 'searlecompany.com',
+      'bestway cement': 'bestway.com.pk',
+      'maple leaf': 'mapleleafcement.com',
+      'fauji cement': 'faujicement.com.pk',
+      'kohat cement': 'kohatcement.com.pk',
+      'attock cement': 'attockcement.com.pk',
+      'siemens': 'siemens.com.pk',
+      'pakistan cables': 'pakistancables.com',
+      'interloop': 'interloop.com.pk',
+      'airlink': 'airlink.com.pk',
+      'tpl': 'tpl.com.pk',
+      'packages': 'packages.com.pk',
+      'k electric': 'ke.com.pk',
+      'sui northern': 'sngpl.com.pk',
+      'sui southern': 'ssgc.com.pk',
+      'ptcl': 'ptcl.com.pk',
+      'hum network': 'humtv.com',
+      'pakistan stock exchange': 'psx.com.pk',
+      'psx': 'psx.com.pk',
+    };
+
+    // Check domain map first
+    for (final entry in domainMap.entries) {
+      if (cleaned.contains(entry.key)) return entry.value;
+    }
+
+    // Fallback: guess from first word
+    final firstWord = cleaned.split(' ').first;
+    return '$firstWord.com.pk';
+  }
+
   Future<void> fetchAllStocks() async {
     try {
       final prodUrl = dotenv.env['base_url_production'] ?? '';
@@ -490,8 +486,11 @@ String _guessDomain(String companyName) {
                               //     size: 22,
                               //   ),
                               // ),
-
-                             _stockLogo(stock['symbol'] ?? '', stock['name'] ?? '', size: 42),
+                              _stockLogo(
+                                stock['symbol'] ?? '',
+                                stock['name'] ?? '',
+                                size: 42,
+                              ),
                               const SizedBox(width: 12),
 
                               // Info
@@ -541,43 +540,56 @@ String _guessDomain(String companyName) {
                                 ),
                               ),
                               // Price & Change
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    "Rs ${stock['current_price'] ?? '-'}",
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 3,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: isPositive
-                                          ? Colors.green.withOpacity(0.2)
-                                          : Colors.red.withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      "${isPositive ? '+' : ''}${changeVal.toStringAsFixed(2)}%",
-                                      style: TextStyle(
-                                        color: isPositive
-                                            ? Colors.greenAccent
-                                            : Colors.redAccent,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                              // Price & Change - Replace the existing Column with this:
+Row(
+  mainAxisSize: MainAxisSize.min,
+  crossAxisAlignment: CrossAxisAlignment.center,
+  children: [
+    // Column 1: Sparkline graph
+    MiniSparkline(symbol: stock['symbol'] ?? ''),
+    
+    const SizedBox(width: 8),
+    
+    // Column 2: Price stacked above Return%
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          "Rs ${stock['current_price'] ?? '-'}",
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 8,
+            vertical: 3,
+          ),
+          decoration: BoxDecoration(
+            color: isPositive
+                ? Colors.green.withOpacity(0.2)
+                : Colors.red.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            "${isPositive ? '+' : ''}${changeVal.toStringAsFixed(2)}%",
+            style: TextStyle(
+              color: isPositive
+                  ? Colors.greenAccent
+                  : Colors.redAccent,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    ),
+  ],
+),  ],
                           ),
                         ),
                       );
@@ -607,4 +619,181 @@ String _guessDomain(String companyName) {
       ),
     );
   }
+}
+
+class MiniSparkline extends StatefulWidget {
+  final String symbol;
+  const MiniSparkline({super.key, required this.symbol});
+
+  @override
+  State<MiniSparkline> createState() => _MiniSparklineState();
+}
+
+class _MiniSparklineState extends State<MiniSparkline> {
+  List<double> prices = [];
+  bool isLoading = true;
+  bool isUp = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSparkline();
+  }
+
+  Future<void> _fetchSparkline() async {
+    try {
+      final prodUrl = dotenv.env['base_url_production'] ?? '';
+      final response = await http.get(
+        Uri.parse('$prodUrl/stocks/history/${widget.symbol}?range=1mo'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final history = List<Map<String, dynamic>>.from(data['history']);
+        final closes = history
+            .map((h) => (h['close'] as num?)?.toDouble() ?? 0.0)
+            .where((v) => v > 0)
+            .toList();
+
+        if (closes.isNotEmpty) {
+          setState(() {
+            prices = closes;
+            isUp = closes.last >= closes.first;
+            isLoading = false;
+          });
+        } else {
+          setState(() => isLoading = false);
+        }
+      } else {
+        // Fallback to DB history
+        final response2 = await http.get(
+          Uri.parse('$prodUrl/stocks/db-history/${widget.symbol}'),
+        );
+        if (response2.statusCode == 200) {
+          final data = jsonDecode(response2.body);
+          final history = List<Map<String, dynamic>>.from(data['history']);
+          final closes = history
+              .map((h) => (h['close'] as num?)?.toDouble() ?? 0.0)
+              .where((v) => v > 0)
+              .toList();
+          setState(() {
+            prices = closes;
+            isUp = closes.isNotEmpty ? closes.last >= closes.first : true;
+            isLoading = false;
+          });
+        } else {
+          setState(() => isLoading = false);
+        }
+      }
+    } catch (e) {
+      setState(() => isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return SizedBox(
+        width: 60,
+        height: 36,
+        child: Center(
+          child: SizedBox(
+            width: 12,
+            height: 12,
+            child: CircularProgressIndicator(
+              strokeWidth: 1.5,
+              color: Colors.white24,
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (prices.isEmpty) {
+      return SizedBox(
+        width: 60,
+        height: 36,
+        child: Center(
+          child: Text(
+            '—',
+            style: TextStyle(color: Colors.white24, fontSize: 12),
+          ),
+        ),
+      );
+    }
+
+    final color = isUp ? const Color(0xFFAAF308) : Colors.redAccent;
+
+    return SizedBox(
+      width: 64,
+      height: 36,
+      child: CustomPaint(
+        painter: _SparklinePainter(prices: prices, color: color),
+      ),
+    );
+  }
+}
+
+class _SparklinePainter extends CustomPainter {
+  final List<double> prices;
+  final Color color;
+
+  _SparklinePainter({required this.prices, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (prices.length < 2) return;
+
+    final minP = prices.reduce((a, b) => a < b ? a : b);
+    final maxP = prices.reduce((a, b) => a > b ? a : b);
+    final range = maxP - minP == 0 ? 1.0 : maxP - minP;
+
+    Offset getPoint(int i) {
+      final x = i * size.width / (prices.length - 1);
+      final y =
+          size.height -
+          ((prices[i] - minP) / range) * size.height * 0.85 -
+          size.height * 0.05;
+      return Offset(x, y);
+    }
+
+    // Gradient fill
+    final fillPath = Path()..moveTo(0, size.height);
+    for (int i = 0; i < prices.length; i++) {
+      fillPath.lineTo(getPoint(i).dx, getPoint(i).dy);
+    }
+    fillPath.lineTo(size.width, size.height);
+    fillPath.close();
+
+    canvas.drawPath(
+      fillPath,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [color.withOpacity(0.3), color.withOpacity(0.0)],
+        ).createShader(Rect.fromLTWH(0, 0, size.width, size.height)),
+    );
+
+    // Line
+    final linePath = Path()..moveTo(getPoint(0).dx, getPoint(0).dy);
+    for (int i = 1; i < prices.length; i++) {
+      linePath.lineTo(getPoint(i).dx, getPoint(i).dy);
+    }
+    canvas.drawPath(
+      linePath,
+      Paint()
+        ..color = color
+        ..strokeWidth = 1.8
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // End dot
+    final last = getPoint(prices.length - 1);
+    canvas.drawCircle(last, 2.5, Paint()..color = color);
+  }
+
+  @override
+  bool shouldRepaint(_SparklinePainter old) => old.prices != prices;
 }
