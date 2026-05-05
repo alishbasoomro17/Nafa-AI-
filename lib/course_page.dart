@@ -20,10 +20,12 @@ class _FinancialCoursePageState extends State<FinancialCoursePage> {
 
   final List<Map<String, String>> lessons = [
     {"title": "What is the Stock Market?", "asset": "assets/lesson1.mp4"},
-    {"title": "Types of Stocks & Shares", "asset": "assets/lesson2.mp4"},
-    {"title": "How Prices Move", "asset": "assets/lesson3.mp4"},
+    {"title": "Types of Stocks aur Shares", "asset": "assets/lesson2.mp4"},
+    {"title": "Stock price kese move karte hain", "asset": "assets/lesson3.mp4"},
     {"title": "Risk & Return Basics", "asset": "assets/lesson4.mp4"},
-    {"title": "How to Start Investing", "asset": "assets/lesson5.mp4"},
+    {"title": "What is diversification?", "asset": "assets/lesson5.mp4"},
+     {"title": "Stock market mein sabr aur sahi faisle", "asset": "assets/lesson6.mp4"},
+      {"title": "Stock market mein long term investing vs short term", "asset": "assets/lesson7.mp4"},
   ];
 
   void _playClickSound() async {

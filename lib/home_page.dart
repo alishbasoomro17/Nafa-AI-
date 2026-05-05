@@ -101,20 +101,14 @@ class _HomePageState extends State<HomePage> {
         elevation: 0,
         centerTitle: false,
         title: Row(
-          children: [
-            Image.asset('assets/logo1.png', height: 32, errorBuilder: (_, __, ___) =>
-                const Icon(Icons.show_chart, color: greenMain, size: 28)),
-            const SizedBox(width: 10),
+          // children: [
+          //   Image.asset('assets/logo1.png', height: 32, errorBuilder: (_, __, ___) =>
+          //       const Icon(Icons.show_chart, color: greenMain, size: 28)),
+          //   const SizedBox(width: 10),              
            
-          ],
+          // ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none_rounded, color: Colors.white70),
-            onPressed: _playClickSound,
-          ),
-          const SizedBox(width: 8),
-        ],
+        
       ),
       body: RefreshIndicator(
         color: greenMain,

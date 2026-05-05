@@ -209,10 +209,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+        
         title: const Text(
           "Recommendations",
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -323,12 +320,13 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                                 const SizedBox(height: 4),
 
                                 Text(
-                                  "Price: Rs ${(stock['current_price'] ?? 0).toString()} • Vol: ${(stock['volume'] ?? 0).toString()}",
-                                  style: const TextStyle(
-                                    color: Colors.white54,
-                                    fontSize: 11,
-                                  ),
-                                ),
+  "Rs ${(stock['current_price'] ?? 0).toString()}",
+  style: const TextStyle(
+    color: Colors.white,
+    fontSize: 14,
+    fontWeight: FontWeight.bold,
+  ),
+),
 
                                 const SizedBox(height: 6),
                                 const SizedBox(height: 6),
@@ -351,52 +349,67 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                             ),
                           ),
 
-                         // Replace the Column with children in the card's right side:
-Column(
-  crossAxisAlignment: CrossAxisAlignment.end,
+                          // Replace the Column with children in the card's right side:
+                          // Replace the existing Column on the right side of the card:
+Row(
+  mainAxisSize: MainAxisSize.min,
+  crossAxisAlignment: CrossAxisAlignment.center,
   children: [
-    // ── % change badge ──
-    Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: changeValue >= 0
-            ? Colors.green.withOpacity(0.15)
-            : Colors.red.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-          color: changeValue >= 0
-              ? Colors.greenAccent.withOpacity(0.4)
-              : Colors.redAccent.withOpacity(0.4),
-        ),
-      ),
-      child: Text(
-        percent,
-        style: TextStyle(
-          color: changeValue >= 0 ? Colors.greenAccent : Colors.redAccent,
-          fontWeight: FontWeight.bold,
-          fontSize: 11,
-        ),
-      ),
-    ),
-
-    const SizedBox(height: 6),
-
-    // ── Mini sparkline ──
+    // Column 1: Sparkline graph
     MiniSparkline(symbol: stock['symbol'] ?? ''),
 
-    const SizedBox(height: 6),
+    const SizedBox(width: 8),
 
-    // ── Arrow button ──
-    Container(
-      padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
-        color: purpleAccent,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: const Icon(Icons.arrow_forward, color: Colors.white, size: 18),
+    // Column 2: % change badge + arrow button
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 10,
+            vertical: 5,
+          ),
+          decoration: BoxDecoration(
+            color: changeValue >= 0
+                ? Colors.green.withOpacity(0.15)
+                : Colors.red.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: changeValue >= 0
+                  ? Colors.greenAccent.withOpacity(0.4)
+                  : Colors.redAccent.withOpacity(0.4),
+            ),
+          ),
+          child: Text(
+            percent,
+            style: TextStyle(
+              color: changeValue >= 0
+                  ? Colors.greenAccent
+                  : Colors.redAccent,
+              fontWeight: FontWeight.bold,
+              fontSize: 11,
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 8),
+
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: purpleAccent,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: const Icon(
+            Icons.arrow_forward,
+            color: Colors.white,
+            size: 18,
+          ),
+        ),
+      ],
     ),
   ],
-), ],
+),     ],
                       ),
                     ),
                   );
@@ -424,7 +437,6 @@ Column(
     );
   }
 }
-
 
 class MiniSparkline extends StatefulWidget {
   final String symbol;
@@ -462,8 +474,8 @@ class _MiniSparklineState extends State<MiniSparkline> {
 
         if (closes.isNotEmpty) {
           setState(() {
-            prices   = closes;
-            isUp     = closes.last >= closes.first;
+            prices = closes;
+            isUp = closes.last >= closes.first;
             isLoading = false;
           });
         } else {
@@ -482,8 +494,8 @@ class _MiniSparklineState extends State<MiniSparkline> {
               .where((v) => v > 0)
               .toList();
           setState(() {
-            prices    = closes;
-            isUp      = closes.isNotEmpty ? closes.last >= closes.first : true;
+            prices = closes;
+            isUp = closes.isNotEmpty ? closes.last >= closes.first : true;
             isLoading = false;
           });
         } else {
@@ -499,10 +511,12 @@ class _MiniSparklineState extends State<MiniSparkline> {
   Widget build(BuildContext context) {
     if (isLoading) {
       return SizedBox(
-        width: 60, height: 36,
+        width: 60,
+        height: 36,
         child: Center(
           child: SizedBox(
-            width: 12, height: 12,
+            width: 12,
+            height: 12,
             child: CircularProgressIndicator(
               strokeWidth: 1.5,
               color: Colors.white24,
@@ -514,9 +528,13 @@ class _MiniSparklineState extends State<MiniSparkline> {
 
     if (prices.isEmpty) {
       return SizedBox(
-        width: 60, height: 36,
+        width: 60,
+        height: 36,
         child: Center(
-          child: Text('—', style: TextStyle(color: Colors.white24, fontSize: 12)),
+          child: Text(
+            '—',
+            style: TextStyle(color: Colors.white24, fontSize: 12),
+          ),
         ),
       );
     }
@@ -549,7 +567,10 @@ class _SparklinePainter extends CustomPainter {
 
     Offset getPoint(int i) {
       final x = i * size.width / (prices.length - 1);
-      final y = size.height - ((prices[i] - minP) / range) * size.height * 0.85 - size.height * 0.05;
+      final y =
+          size.height -
+          ((prices[i] - minP) / range) * size.height * 0.85 -
+          size.height * 0.05;
       return Offset(x, y);
     }
 
@@ -561,23 +582,29 @@ class _SparklinePainter extends CustomPainter {
     fillPath.lineTo(size.width, size.height);
     fillPath.close();
 
-    canvas.drawPath(fillPath, Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [color.withOpacity(0.3), color.withOpacity(0.0)],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height)));
+    canvas.drawPath(
+      fillPath,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [color.withOpacity(0.3), color.withOpacity(0.0)],
+        ).createShader(Rect.fromLTWH(0, 0, size.width, size.height)),
+    );
 
     // Line
     final linePath = Path()..moveTo(getPoint(0).dx, getPoint(0).dy);
     for (int i = 1; i < prices.length; i++) {
       linePath.lineTo(getPoint(i).dx, getPoint(i).dy);
     }
-    canvas.drawPath(linePath, Paint()
-      ..color = color
-      ..strokeWidth = 1.8
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round);
+    canvas.drawPath(
+      linePath,
+      Paint()
+        ..color = color
+        ..strokeWidth = 1.8
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round,
+    );
 
     // End dot
     final last = getPoint(prices.length - 1);
